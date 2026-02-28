@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// USER -> AREAS, CHORES AREA -> CHORE A
+// neon.tech/app/projects
+
+model User {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  name           String?
+  password       String 
+  isAdmin        Boolean? @default(false)   
+  currentAsignement    Assignment[]
+  createdChores  Chore[]  
+  createdAt      DateTime @default(now())
+  @@map("users")   
+  
+  cleaningEvents CleaningEvent[]
+}
+
+
+model Chore {
+  id            String    @id @default(cuid())
+  title         String    
+  description   String?
+  points        Int?      @default(0)
+  assignments   Assignment[]  
+  createdAt     DateTime  @default(now())
+  area          Area? @default(EVERYWHERE)
+  createdById   String    
+  createdBy     User?     @relation(fields: [createdById], references: [id])
+@@map("chores")   
+  cleaningEvents CleaningEvent[]
+}
+
+enum Area {
+  EVERYWHERE
+  KITCHEN
+  BATHROOM
+  BEDROOM
+  LIVING_ROOM
+  DINING_ROOM
+  OFFICE
+  LAUNDRY_ROOM
+  GARAGE
+  BALCONY
+  OUTSIDE_PATIO
+  GARDEN
+}
+
+model CleaningEvent {
+  id            String   @id @default(cuid())
+  participants  User[]
+  selectedChores Chore[]
+  scheduledAt   DateTime
+  executed      Boolean
+  @@map("randomization_events")
+  assignments Assignment[]
+}
+
+model Assignment {
+  id           String        @id @default(cuid())
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  chore        Chore         @relation(fields: [choreId], references: [id])
+  choreId      String
+  cleaningEvent CleaningEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId      String
+  assignedAt   DateTime      @default(now())
+  completed    Boolean       @default(false)
+  completedAt  DateTime?
+  
+  @@unique([userId, choreId, eventId]) // Prevents same chore twice per user per event
+  @@map("assignments")
+}
