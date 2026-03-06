@@ -15,6 +15,45 @@ const prisma = new PrismaClient({
 // TODO create env var
 const userId = "5c7c1364-ca79-4e88-a9da-d0033608c01f"
 
+const testUsers = [
+  {
+    id: userId,
+    name: "John Doe",
+    email: "john@example.com",
+    password: "hashedpassword", // In real app, hash this
+  },
+];
+
+const testHouseholds = [
+  {
+    name: "Doe Household",
+    ownerId: userId,
+  },
+];
+
+const testRooms = [
+  {
+    name: "Kitchen",
+    householdId: "", // Will set after creating household
+    createdById: userId,
+  },
+  {
+    name: "Bathroom",
+    householdId: "",
+    createdById: userId,
+  },
+  {
+    name: "Living Room",
+    householdId: "",
+    createdById: userId,
+  },
+  {
+    name: "Bedroom",
+    householdId: "",
+    createdById: userId,
+  },
+];
+
 const testChores = [
   {
     title: "Wash dishes",
@@ -81,6 +120,30 @@ const testChores = [
 const main = async () => {
     console.log("Seeding DB")
 
+    // Create user
+    const user = await prisma.user.create({
+        data: testUsers[0]
+    })
+    console.log("Created user: " + user.name)
+
+    // Create household
+    const household = await prisma.household.create({
+        data: testHouseholds[0]
+    })
+    console.log("Created household: " + household.name)
+
+    // Set householdId in rooms
+    testRooms.forEach(room => room.householdId = household.id)
+
+    // Create rooms
+    for (const room of testRooms){
+        await prisma.room.create({
+            data: room
+        })
+        console.log("Created room: " + room.name)
+    }
+
+    // Create chores
     for (const chore of testChores){
         await prisma.chore.create({
             data: chore
