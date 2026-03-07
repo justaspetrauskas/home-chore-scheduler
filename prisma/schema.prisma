@@ -13,85 +13,91 @@ datasource db {
 }
 
 enum Role {
- ADMIN
- MEMBER
- EVENT_MANAGER
+  ADMIN
+  MEMBER
+  EVENT_MANAGER
 }
 
 model User {
- id        String   @id @default(uuid())
- name      String
- email     String   @unique
- password  String
- createdAt DateTime @default(now())
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
 
- memberships HouseholdMember[]
- taskAssignments TaskAssignment[]
- choresCreated Chore[]
+  memberships     HouseholdMember[]
+  taskAssignments TaskAssignment[]
+  choresCreated   Chore[]
 }
 
 model Household {
- id        String   @id @default(uuid())
- name      String
- ownerId   String
- createdAt DateTime @default(now())
+  id        String   @id @default(uuid())
+  name      String
+  ownerId   String
+  createdAt DateTime @default(now())
 
- members HouseholdMember[]
- rooms   Room[]
- events  CleaningEvent[]
+  members HouseholdMember[]
+  rooms   Room[]
+  events  CleaningEvent[]
 }
 
 model HouseholdMember {
- id          String @id @default(uuid())
- userId      String
- householdId String
- role        Role
- user       User      @relation(fields: [userId], references: [id])
- household  Household @relation(fields: [householdId], references: [id])
- @@unique([userId, householdId])
+  id          String    @id @default(uuid())
+  userId      String
+  householdId String
+  role        Role
+  user        User      @relation(fields: [userId], references: [id])
+  household   Household @relation(fields: [householdId], references: [id])
+
+  @@unique([userId, householdId])
 }
 
 model Room {
-  id          String   @id @default(uuid())
+  id          String           @id @default(uuid())
   name        String
   householdId String
-  household   Household @relation(fields: [householdId], references: [id])
+  household   Household        @relation(fields: [householdId], references: [id])
   createdById String
-  createdAt   DateTime @default(now())
-  tasks TaskAssignment[]
+  createdAt   DateTime         @default(now())
+  tasks       TaskAssignment[]
+  chores      Chore[]
 }
 
 model Chore {
-  id          String   @id @default(uuid())
+  id          String  @id @default(uuid())
   title       String
   description String?
   points      Int
+
+  // optional reference to a room/area
+  roomId String?
+  room   Room?   @relation(fields: [roomId], references: [id])
+
   createdById String
-  createdBy   User @relation(fields: [createdById], references: [id])
-  createdAt   DateTime @default(now())
+  createdBy   User             @relation(fields: [createdById], references: [id])
+  createdAt   DateTime         @default(now())
   assignments TaskAssignment[]
 }
 
 model CleaningEvent {
-  id          String   @id @default(uuid())
+  id          String           @id @default(uuid())
   title       String
   date        DateTime
   householdId String
-  household   Household @relation(fields: [householdId], references: [id])
+  household   Household        @relation(fields: [householdId], references: [id])
   createdById String
-  createdAt DateTime @default(now())
-  tasks TaskAssignment[]
+  createdAt   DateTime         @default(now())
+  tasks       TaskAssignment[]
 }
 
 model TaskAssignment {
-  id        String @id @default(uuid())
-  eventId   String
-  roomId    String
-  choreId   String
+  id           String        @id @default(uuid())
+  eventId      String
+  roomId       String
+  choreId      String
   assignedToId String?
-  event     CleaningEvent @relation(fields: [eventId], references: [id])
-  room      Room          @relation(fields: [roomId], references: [id])
-  chore     Chore         @relation(fields: [choreId], references: [id])
-  assignedTo User?        @relation(fields: [assignedToId], references: [id])
+  event        CleaningEvent @relation(fields: [eventId], references: [id])
+  room         Room          @relation(fields: [roomId], references: [id])
+  chore        Chore         @relation(fields: [choreId], references: [id])
+  assignedTo   User?         @relation(fields: [assignedToId], references: [id])
 }
-

@@ -3,24 +3,22 @@ import { prisma } from "../config/db.js"
 const getUser = async (req, res) => {
     const { id } = req.params
 
+    // users can only fetch their own profile for now
+    if (id !== req.user.id) {
+        return res.status(403).json({ error: "Not allowed to view this user" })
+    }
+
     try {
-        const user = await prisma.user.findFirst({
-            where: {
-                id,
-                OR: [
-                    { id: req.user.id }, 
-                    { isAdmin: true } 
-                ]
-            },
+        const user = await prisma.user.findUnique({
+            where: { id },
             select: {
                 id: true,
                 email: true,
                 name: true,
-                isAdmin: true,
                 createdAt: true,
-                createdChores: true,
-                assignedAreas: true,
-                currentAsignement: true
+                memberships: true,
+                taskAssignments: true,
+                choresCreated: true
             }
         })
 
@@ -42,8 +40,10 @@ const getMe = async (req, res) => {
                 id: true,
                 email: true,
                 name: true,
-                isAdmin: true,
-                createdAt: true
+                createdAt: true,
+                memberships: true,
+                taskAssignments: true,
+                choresCreated: true
             }
         })
 
@@ -58,17 +58,12 @@ const getMe = async (req, res) => {
 }
 
 const getAllUsers = async (req, res) => {
-    if (!req.user.isAdmin) {
-        return res.status(403).json({ error: "Admin access required" })
-    }
-
     try {
         const users = await prisma.user.findMany({
             select: {
                 id: true,
                 email: true,
                 name: true,
-                isAdmin: true,
                 createdAt: true
             },
             orderBy: { createdAt: 'desc' }
@@ -82,7 +77,7 @@ const getAllUsers = async (req, res) => {
 
 const updateUser = async (req, res) => {
     const { id } = req.params
-    const { name, isAdmin } = req.body
+    const { name } = req.body
 
     const targetUser = await prisma.user.findUnique({ where: { id } })
 
@@ -90,20 +85,15 @@ const updateUser = async (req, res) => {
         return res.status(404).json({ error: "User not found" })
     }
 
-    if (targetUser.id !== req.user.id && !req.user.isAdmin) {
+    if (targetUser.id !== req.user.id) {
         return res.status(403).json({ error: "Not allowed to update this user" })
-    }
-
-    if (!req.user.isAdmin && isAdmin !== undefined) {
-        return res.status(403).json({ error: "Admin-only field" })
     }
 
     try {
         const updatedUser = await prisma.user.update({
             where: { id },
             data: {
-                name: name || undefined,
-                isAdmin: isAdmin || undefined
+                name: name || undefined
             }
         })
 
@@ -113,8 +103,7 @@ const updateUser = async (req, res) => {
                 user: {
                     id: updatedUser.id,
                     email: updatedUser.email,
-                    name: updatedUser.name,
-                    isAdmin: updatedUser.isAdmin
+                    name: updatedUser.name
                 }
             }
         })
@@ -126,16 +115,7 @@ const updateUser = async (req, res) => {
 const deleteUser = async (req, res) => {
     const { id } = req.params
 
-    const targetUser = await prisma.user.findUnique({ 
-        where: { id },
-        select: { id: true, isAdmin: true }
-    })
-
-    if (!targetUser) {
-        return res.status(404).json({ error: "User not found" })
-    }
-
-    if (targetUser.id !== req.user.id && (!req.user.isAdmin || targetUser.isAdmin)) {
+    if (id !== req.user.id) {
         return res.status(403).json({ error: "Not allowed to delete this user" })
     }
 
@@ -147,4 +127,21 @@ const deleteUser = async (req, res) => {
     }
 }
 
-export { getUser, getAllUsers, updateUser, deleteUser, getMe }
+  const listHouseholds = async (req, res) => {
+    try {
+      const userId = req.user.id
+      const households = await prisma.householdMember.findMany({
+        where: { userId },
+        select: {
+          household: true,
+          role: true
+        }
+      })
+      res.json(households)
+    } catch (error) {
+      console.error(error)
+      res.status(500).json({ message: 'Server error' })
+    }
+  }
+
+export { getUser, getAllUsers, listHouseholds,updateUser, deleteUser, getMe }

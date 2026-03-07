@@ -4,24 +4,7 @@ import { z } from 'zod'
 const choreBaseSchema = z.object({
     title: z.string().min(1, "Title is required"),
     description: z.string().optional(),
-    area: z.enum([
-        "EVERYWHERE",
-        "KITCHEN",
-        "BATHROOM",
-        "BEDROOM",
-        "LIVING_ROOM",
-        "DINING_ROOM",
-        "OFFICE",
-        "LAUNDRY_ROOM",
-        "GARAGE",
-        "BALCONY",
-        "OUTSIDE_PATIO",
-        "GARDEN"
-    ], {
-        error: () => ({
-            message: "Area must be one of: EVERYWHERE, KITCHEN, BATHROOM, BEDROOM, LIVING_ROOM, DINING_ROOM, OFFICE, LAUNDRY_ROOM, GARAGE, BALCONY, OUTSIDE_PATIO, GARDEN"
-        })
-    }).optional(),
+    roomId: z.string().uuid("Room ID must be a valid UUID").optional(),
     points: z.coerce.number()
         .int("Points must be whole number")
         .min(1, "Points must be at least 1")

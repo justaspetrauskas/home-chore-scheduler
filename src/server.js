@@ -4,6 +4,7 @@ import { connectDB, disconnectDB } from './config/db.js'
 
 import choreRoutes from "./routes/choreRoutes.js"
 import authRoutes from "./routes/authRoutes.js"
+import roomRoutes from "./routes/roomRoutes.js"
 
 config();
 connectDB();
@@ -18,6 +19,8 @@ app.use(express.urlencoded({extended: true}))
 app.use("/auth", authRoutes)
 
 app.use("/chores", choreRoutes)
+
+app.use("/rooms", roomRoutes)
 
 
 const PORT = 5050;
