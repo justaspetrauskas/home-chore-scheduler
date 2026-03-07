@@ -2,6 +2,9 @@ import express from 'express'
 import { config } from "dotenv"
 import { connectDB, disconnectDB } from './config/db.js'
 
+// Start cron jobs
+import '../src/cronTest.js'
+
 import choreRoutes from "./routes/choreRoutes.js"
 import authRoutes from "./routes/authRoutes.js"
 import roomRoutes from "./routes/roomRoutes.js"

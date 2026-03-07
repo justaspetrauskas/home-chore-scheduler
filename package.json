@@ -5,12 +5,17 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/server.js",
+    "cron": "node src/cronTest.js",
+    "worker": "node src/worker.js",
+    "worker:setup": "npx graphile-worker --schema-only",
     "seed:chores": "node prisma/seed.js",
     "migrate": "prisma migrate dev",
     "generate": "prisma generate",
-    "studio": "prisma studio"
+    "studio": "prisma studio",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "keywords": [],
   "author": "",
@@ -23,10 +28,12 @@
     "express": "^5.2.1",
     "graphile-worker": "^0.16.6",
     "jsonwebtoken": "^9.0.3",
+    "node-cron": "^4.2.1",
     "pg": "^8.18.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "cross-env": "^10.1.0",
     "jest": "^30.2.0",
     "nodemon": "^3.1.11",
     "prisma": "^7.3.0",

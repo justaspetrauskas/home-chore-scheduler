@@ -1,5 +1,5 @@
 // services/assignmentService.js
-import { prisma } from "../config/db.js"
+import { prisma } from "../../config/db.js"
 
 export const randomizeChoreAssignments = async (userIds, choreIds, eventId) => {
     try {
