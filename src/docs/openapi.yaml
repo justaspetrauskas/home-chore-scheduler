@@ -1,0 +1,27 @@
+openapi: 3.0.3
+info:
+  title: Home Chore Scheduler API
+  version: 1.0.0
+  description: API documentation for the chore management backend.
+servers:
+  - url: http://localhost:5050/api-docs
+    description: Local development server
+tags:
+  - name: Auth
+  - name: Users
+  - name: Households
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      $ref: "./schemas/user.yaml"
+
+paths:
+  /users:
+    $ref: "./paths/users.yaml#/getUsers"
