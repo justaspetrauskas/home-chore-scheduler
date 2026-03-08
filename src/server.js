@@ -1,5 +1,7 @@
 import express from 'express'
 import { config } from "dotenv"
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./docs/swagger.js"
 import { connectDB, disconnectDB } from './config/db.js'
 
 // Start cron jobs
@@ -24,6 +26,10 @@ app.use("/auth", authRoutes)
 app.use("/chores", choreRoutes)
 
 app.use("/rooms", roomRoutes)
+
+if (process.env.NODE_ENV === "development") {
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+}
 
 
 const PORT = 5050;

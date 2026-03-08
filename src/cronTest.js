@@ -6,4 +6,3 @@ cron.schedule(schedule, () => {
   console.log('Cron job running at', new Date().toLocaleString());
   // You can run any command or function here
 });
-

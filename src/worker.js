@@ -1,6 +1,6 @@
 
 import { run } from 'graphile-worker';
-import 'dotenv/config'
+import 'dotenv/config';
 import { randomizeChoreAssignments } from './controllers/services/assignmentService.js';
 
 const taskList = {

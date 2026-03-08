@@ -1,6 +1,5 @@
-import { prisma } from "../config/db.js"
 
-const getUser = async (req, res) => {
+const getUser = (prisma) => async (req, res) => {
     const { id } = req.params
 
     // users can only fetch their own profile for now
