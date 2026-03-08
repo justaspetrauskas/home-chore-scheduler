@@ -8,8 +8,21 @@ servers:
     description: Local development server
 tags:
   - name: Auth
+    description: Authentication and login endpoints
   - name: Users
+    description: User management
   - name: Households
+    description: Household management
+  - name: HouseholdMembers
+    description: Memberships in households
+  - name: Rooms
+    description: Room management
+  - name: Chores
+    description: Chore management
+  - name: CleaningEvents
+    description: Cleaning event scheduling
+  - name: TaskAssignments
+    description: Chore/task assignments
 
 components:
   securitySchemes:
@@ -21,7 +34,18 @@ components:
   schemas:
     User:
       $ref: "./schemas/user.yaml"
+    Household:
+      $ref: "./schemas/household.yaml"
+    HouseholdMember:
+      $ref: "./schemas/householdMember.yaml"
+    Room:
+      $ref: "./schemas/room.yaml"
+    Chore:
+      $ref: "./schemas/chore.yaml"
+    CleaningEvent:
+      $ref: "./schemas/cleaningEvent.yaml"
+    TaskAssignment:
+      $ref: "./schemas/taskAssignment.yaml"
+    Auth:
+      $ref: "./schemas/auth.yaml"
 
-paths:
-  /users:
-    $ref: "./paths/users.yaml#/getUsers"

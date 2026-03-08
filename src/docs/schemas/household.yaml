@@ -1,35 +1,32 @@
 type: object
-required:
-  - id
-  - name
-  - email
 properties:
   id:
     type: string
     format: uuid
-    example: "b1a2c3d4-e5f6-7890-abcd-1234567890ef"
+    example: "a1b2c3d4-e5f6-7890-abcd-1234567890ef"
   name:
     type: string
-    example: "John Doe"
-  email:
+    example: "Smith Family"
+  ownerId:
     type: string
-    example: "john@example.com"
+    format: uuid
+    example: "b1a2c3d4-e5f6-7890-abcd-1234567890ef"
   createdAt:
     type: string
     format: date-time
     example: "2024-03-08T12:34:56Z"
-  memberships:
+  members:
     type: array
     items:
       type: string
     description: "Array of HouseholdMember IDs"
-  taskAssignments:
+  rooms:
     type: array
     items:
       type: string
-    description: "Array of TaskAssignment IDs"
-  choresCreated:
+    description: "Array of Room IDs"
+  events:
     type: array
     items:
       type: string
-    description: "Array of Chore IDs"
+    description: "Array of CleaningEvent IDs"

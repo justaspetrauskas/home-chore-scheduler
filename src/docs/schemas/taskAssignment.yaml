@@ -1,0 +1,19 @@
+type: object
+properties:
+  id:
+    type: string
+    format: uuid
+    example: "g1h2i3j4-k5l6-7890-abcd-1234567890ef"
+  eventId:
+    type: string
+    format: uuid
+  roomId:
+    type: string
+    format: uuid
+  choreId:
+    type: string
+    format: uuid
+  assignedToId:
+    type: string
+    format: uuid
+    nullable: true

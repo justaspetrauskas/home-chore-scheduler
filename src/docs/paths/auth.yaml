@@ -22,6 +22,6 @@ login:
         content:
           application/json:
             schema:
-              $ref: '../schemas/auth.yaml#/schemas/Auth'
+              $ref: '../schemas/auth.yaml'
       401:
         description: Invalid credentials
