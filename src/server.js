@@ -27,11 +27,10 @@ app.use("/chores", choreRoutes)
 
 app.use("/rooms", roomRoutes)
 
-if (process.env.NODE_ENV === "development") {
-  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-}
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 
+app.get("/test", (req, res) => res.send("Test route working"));
 const PORT = 5050;
 
 app.listen(PORT,()=>{
