@@ -1,15 +1,15 @@
 import express from 'express'
 import { config } from "dotenv"
 import swaggerUi from "swagger-ui-express";
-import YAML from "yamljs";
 import { connectDB, disconnectDB } from './config/db.js'
-
-// Start cron jobs
-import '../src/cronTest.js'
-
+import swaggerDocument from "./docs/swagger.js" assert { type: "json" };
 import choreRoutes from "./routes/choreRoutes.js"
 import authRoutes from "./routes/authRoutes.js"
 import roomRoutes from "./routes/roomRoutes.js"
+// Start cron jobs
+import '../src/cronTest.js'
+
+
 
 config();
 connectDB();
@@ -28,9 +28,11 @@ app.use("/chores", choreRoutes)
 app.use("/rooms", roomRoutes)
 
 
-// Load OpenAPI YAML doc
-const openapiDocument = YAML.load("./src/docs/openapi.yaml");
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openapiDocument));
+
+// Swagger
+if (process.env.NODE_ENV === "development") {
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+}
 
 
 const PORT = 5050;
