@@ -2,7 +2,7 @@ import express from 'express'
 import { config } from "dotenv"
 import swaggerUi from "swagger-ui-express";
 import { connectDB, disconnectDB } from './config/db.js'
-import swaggerDocument from "./docs/swagger.js" assert { type: "json" };
+import {swaggerSpec} from "./docs/swagger.js"
 import choreRoutes from "./routes/choreRoutes.js"
 import authRoutes from "./routes/authRoutes.js"
 import roomRoutes from "./routes/roomRoutes.js"
