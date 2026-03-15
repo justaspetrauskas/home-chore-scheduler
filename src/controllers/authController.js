@@ -59,7 +59,7 @@ const login = async(req, res)=>{
     res.status(201).json({
         status: "success", 
         data: { user: 
-            { id: user.id, email },
+            { id: user.id, name: user.name, email },
              token
             }
         })

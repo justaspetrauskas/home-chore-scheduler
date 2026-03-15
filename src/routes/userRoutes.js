@@ -20,7 +20,7 @@ router.use(authMiddleware)
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
- *     description: Uses controller: getAllUsers
+ *     description: "Uses controller: getAllUsers"
  *     responses:
  *       200:
  *         description: List of users
@@ -35,7 +35,7 @@ router.get('/', getAllUsers)
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
- *     description: Uses controller: getMe
+ *     description: "Uses controller: getMe"
  *     responses:
  *       200:
  *         description: Current user profile
@@ -50,7 +50,7 @@ router.get('/me', getMe)
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
- *     description: Uses controller: getUser
+ *     description: "Uses controller: getUser"
  *     parameters:
  *       - in: path
  *         name: id
@@ -66,7 +66,7 @@ router.get('/me', getMe)
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
- *     description: Uses controller: updateUser
+ *     description: "Uses controller: updateUser"
  *     parameters:
  *       - in: path
  *         name: id
@@ -91,7 +91,7 @@ router.get('/me', getMe)
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
- *     description: Uses controller: deleteUser
+ *     description: "Uses controller: deleteUser"
  *     parameters:
  *       - in: path
  *         name: id

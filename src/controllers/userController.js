@@ -1,3 +1,4 @@
+import { prisma } from "../config/db.js"
 
 const getUser = (prisma) => async (req, res) => {
     const { id } = req.params

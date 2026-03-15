@@ -6,6 +6,9 @@ import {swaggerSpec} from "./docs/swagger.js"
 import choreRoutes from "./routes/choreRoutes.js"
 import authRoutes from "./routes/authRoutes.js"
 import roomRoutes from "./routes/roomRoutes.js"
+import userRoutes from "./routes/userRoutes.js"
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
 // Start cron jobs
 import '../src/cronTest.js'
 
@@ -14,18 +17,34 @@ import '../src/cronTest.js'
 config();
 connectDB();
 
+
 const app = express()
 
-// Body parsing middlwares
+// CORS middleware
+const corsOptions = {
+  origin: true,
+  methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
+  allowedHeaders: ["Content-Type","Authorization"],
+  credentials: true
+};
+
+if (process.env.NODE_ENV === "development") {
+  app.use(cors(corsOptions));
+}
+
+// Body parsing and cookie parsing middleware
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
+app.use(cookieParser())
 
 // API Routes
 app.use("/auth", authRoutes)
 
 app.use("/chores", choreRoutes)
 
+
 app.use("/rooms", roomRoutes)
+app.use("/users", userRoutes)
 
 
 
