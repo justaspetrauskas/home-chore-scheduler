@@ -5,9 +5,12 @@ import { connectDB, disconnectDB } from './config/db.js'
 import {swaggerSpec} from "./docs/swagger.js"
 import choreRoutes from "./routes/choreRoutes.js"
 import authRoutes from "./routes/authRoutes.js"
-
 import cleaningEventRoutes from "./routes/cleaningEventRoutes.js"
-// ...existing code...
+import cors from "cors";
+import cookieParser from "cookie-parser"
+import roomRoutes from "./routes/roomRoutes.js"
+import householdRoutes from "./routes/householdRoutes.js"
+import userRoutes from "./routes/userRoutes.js" 
 
 
 
@@ -36,15 +39,10 @@ app.use(cookieParser())
 
 // API Routes
 app.use("/auth", authRoutes)
-
 app.use("/chores", choreRoutes)
-
-
-
 app.use("/rooms", roomRoutes)
 app.use("/households", householdRoutes)
 app.use("/cleaning-events", cleaningEventRoutes)
-
 app.use("/users", userRoutes)
 
 
