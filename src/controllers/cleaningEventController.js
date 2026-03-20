@@ -1,6 +1,6 @@
 // controllers/cleaningEventController.js
 import { prisma } from "../config/db.js"
-import { randomizeChoreAssignments } from "../services/assignmentService.js"
+import { randomizeChoreAssignments } from "./services/assignmentService.js"
 
 const createCleaningEvent = async (req, res) => {
     const { participantIds, choreIds, scheduledAt } = req.body
