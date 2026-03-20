@@ -1,6 +1,4 @@
-// controllers/householdController.js
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import { prisma } from "../config/db.js";
 
 // Create a new household
 const createHousehold = async (req, res) => {
@@ -13,7 +11,7 @@ const createHousehold = async (req, res) => {
         name,
         ownerId: userId,
         members: {
-          create: { userId, role: 'OWNER' }
+          create: { userId, role: 'ADMIN' }
         }
       },
       include: { members: true }
@@ -51,7 +49,7 @@ const getHouseholdById = async (req, res) => {
     const { id } = req.params;
 
     const household = await prisma.household.findUnique({
-      where: { id: Number(id) },
+      where: { id },
       include: { members: { include: { user: true } } }
     });
 
@@ -72,7 +70,7 @@ const inviteMember = async (req, res) => {
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const existingMember = await prisma.householdMember.findUnique({
-      where: { userId_householdId: { userId: user.id, householdId: Number(householdId) } }
+      where: { userId_householdId: { userId: user.id, householdId } }
     });
 
     if (existingMember) return res.status(400).json({ error: 'User already a member' });
@@ -80,7 +78,7 @@ const inviteMember = async (req, res) => {
     const membership = await prisma.householdMember.create({
       data: {
         userId: user.id,
-        householdId: Number(householdId),
+        householdId,
         role: role ? role.toUpperCase() : 'MEMBER'
       }
     });
@@ -97,7 +95,7 @@ const removeMember = async (req, res) => {
     const { householdId, userId } = req.params;
 
     await prisma.householdMember.delete({
-      where: { userId_householdId: { userId: Number(userId), householdId: Number(householdId) } }
+      where: { userId_householdId: { userId, householdId } }
     });
 
     res.json({ message: 'Member removed successfully' });

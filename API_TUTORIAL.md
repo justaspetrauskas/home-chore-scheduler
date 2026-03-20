@@ -42,7 +42,11 @@ Welcome to the Home Chore Scheduler API! This backend service helps manage chore
 
 ## Cleaning Events
 - List: `GET /cleaning-events` (auth required)
+	- Returns cleaning events where the user is a participant.
+	- Response: `{ status: "success", data: { events: [...] } }`
 - Create: `POST /cleaning-events` (auth required)
+	- Request body: `{ participantIds: [userId], choreIds: [choreId], scheduledAt: <date-time> }`
+	- Response: `{ status: "success", data: { event: {...}, assignments: [...] } }`
 
 ## General Usage
 1. **Register and Login** to get your JWT token.

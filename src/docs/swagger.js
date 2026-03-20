@@ -153,27 +153,42 @@ const options = {
           description: "Controller: getMe",
           security: [{ bearerAuth: [] }],
           responses: { 200: { description: "Current user profile" } },
-        },
-      },
-      "/users/{id}": {
-        get: {
-          tags: ["Users"],
-          summary: "Get user by ID",
-          description: "Controller: getUser",
-          security: [{ bearerAuth: [] }],
-          parameters: [
-            { name: "id", in: "path", required: true, schema: { type: "string" }, description: "The user's unique ID" },
-          ],
-          responses: { 200: { description: "User found" } },
-        },
-        put: {
-          tags: ["Users"],
-          summary: "Update user by ID",
-          description: "Controller: updateUser",
-          security: [{ bearerAuth: [] }],
-          parameters: [
-            { name: "id", in: "path", required: true, schema: { type: "string" }, description: "The user's unique ID" },
-          ],
+          "/users/set-default-household": {
+            post: {
+              tags: ["Users"],
+              summary: "Set default household for user",
+              description: "Sets the user's default household. If householdId is not provided and user has only one membership, it will auto-select. Controller: setDefaultHousehold",
+              requestBody: {
+                required: false,
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: {
+                        householdId: { type: "string", format: "uuid" }
+                      }
+                    }
+                  }
+                }
+              },
+              responses: {
+                200: {
+                  description: "Default household set",
+                  content: {
+                    "application/json": {
+                      schema: {
+                        type: "object",
+                        properties: {
+                          status: { type: "string" },
+                          defaultHouseholdId: { type: "string", format: "uuid" }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+            },
+          },
           requestBody: {
             required: true,
             content: {
@@ -323,15 +338,80 @@ const options = {
       "/cleaning-events": {
         get: {
           tags: ["CleaningEvents"],
-          summary: "Get cleaning events",
-          description: "Controller: getCleaningEvents",
-          responses: { 200: { description: "Cleaning events" } },
+          summary: "Get cleaning events for user",
+          description: "Returns cleaning events where the user is a participant. Controller: getCleaningEvents",
+          security: [{ bearerAuth: [] }],
+          responses: {
+            200: {
+              description: "Cleaning events",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      status: { type: "string" },
+                      data: {
+                        type: "object",
+                        properties: {
+                          events: {
+                            type: "array",
+                            items: { $ref: "#/components/schemas/CleaningEvent" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         },
         post: {
           tags: ["CleaningEvents"],
           summary: "Create cleaning event",
-          description: "Controller: createCleaningEvent",
-          responses: { 200: { description: "Cleaning event created" } },
+          description: "Creates a new cleaning event and generates random assignments. Controller: createCleaningEvent",
+          security: [{ bearerAuth: [] }],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    participantIds: { type: "array", items: { type: "string", format: "uuid" } },
+                    choreIds: { type: "array", items: { type: "string", format: "uuid" } },
+                    scheduledAt: { type: "string", format: "date-time" }
+                  },
+                  required: ["participantIds", "choreIds", "scheduledAt"]
+                }
+              }
+            }
+          },
+          responses: {
+            201: {
+              description: "Cleaning event created",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      status: { type: "string" },
+                      data: {
+                        type: "object",
+                        properties: {
+                          event: { $ref: "#/components/schemas/CleaningEvent" },
+                          assignments: {
+                            type: "array",
+                            items: { $ref: "#/components/schemas/TaskAssignment" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         },
       },
     },

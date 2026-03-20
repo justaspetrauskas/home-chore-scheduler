@@ -59,34 +59,124 @@ const getUser = (prisma) => async (req, res) => {
             return res.status(404).json({ error: "User not found" })
         }
 
-        res.json({ status: "success", data: { user } })
+                // Remove sensitive/unwanted fields
+                function cleanUser(u) {
+                    if (!u) return u;
+                    const { password, defaultHouseholdId, ...rest } = u;
+                    // Clean memberships: only return householdId and role
+                    let memberships = rest.memberships;
+                    if (Array.isArray(memberships)) {
+                        memberships = memberships.map(m => ({ householdId: m.householdId, role: m.role }));
+                    }
+                    return { ...rest, memberships };
+                }
+
+                // If only one membership and no defaultHousehold, set it automatically
+                if (
+                    user &&
+                    Array.isArray(user.memberships) &&
+                    user.memberships.length === 1 &&
+                    !user.defaultHousehold
+                ) {
+                    const onlyMembership = user.memberships[0];
+                    if (onlyMembership && onlyMembership.householdId) {
+                        await prisma.user.update({
+                            where: { id: user.id },
+                            data: { defaultHouseholdId: onlyMembership.householdId }
+                        });
+                        // Refetch user with defaultHousehold
+                        const updatedUser = await prisma.user.findUnique({
+                            where: { id: user.id },
+                            include: {
+                                defaultHousehold: { select: { id: true, name: true } },
+                                memberships: true,
+                                taskAssignments: true,
+                                choresCreated: true
+                            }
+                        });
+                        return res.json({ status: "success", data: { user: cleanUser(updatedUser) } });
+                    }
+                }
+
+                // If only one membership and no defaultHousehold, fetch and return it as defaultHousehold
+                if (
+                    user &&
+                    Array.isArray(user.memberships) &&
+                    user.memberships.length === 1 &&
+                    !user.defaultHousehold
+                ) {
+                    const onlyMembership = user.memberships[0];
+                    if (onlyMembership && onlyMembership.householdId) {
+                        // Fetch the household object
+                        const household = await prisma.household.findUnique({
+                            where: { id: onlyMembership.householdId },
+                            select: { id: true, name: true }
+                        });
+                        const cleaned = cleanUser(user);
+                        cleaned.defaultHousehold = household;
+                        return res.json({ status: "success", data: { user: cleaned } });
+                    }
+                }
+                res.json({ status: "success", data: { user: cleanUser(user) } })
     } catch (error) {
         return res.status(500).json({ error: "Server error" })
     }
 }
 
 const getMe = async (req, res) => {
+    function cleanUser(u) {
+        if (!u) return u;
+        const { password, defaultHouseholdId, ...rest } = u;
+        // Clean memberships: only return householdId and role
+        let memberships = rest.memberships;
+        if (Array.isArray(memberships)) {
+            memberships = memberships.map(m => ({ householdId: m.householdId, role: m.role }));
+        }
+        return { ...rest, memberships };
+    }
     try {
         const user = await prisma.user.findUnique({
             where: { id: req.user.id },
-            select: {
-                id: true,
-                email: true,
-                name: true,
-                createdAt: true,
+            include: {
+                defaultHousehold: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
                 memberships: true,
                 taskAssignments: true,
                 choresCreated: true
             }
-        })
+        });
 
         if (!user) {
-            return res.status(404).json({ error: "User not found" })
+            return res.status(404).json({ error: "User not found" });
         }
 
-        res.json({ status: "success", data: { user } })
+        // If only one membership and no defaultHousehold, fetch and return it as defaultHousehold
+        if (
+            user &&
+            Array.isArray(user.memberships) &&
+            user.memberships.length === 1 &&
+            !user.defaultHousehold
+        ) {
+            const onlyMembership = user.memberships[0];
+            if (onlyMembership && onlyMembership.householdId) {
+                // Fetch the household object
+                const household = await prisma.household.findUnique({
+                    where: { id: onlyMembership.householdId },
+                    select: { id: true, name: true }
+                });
+                const cleaned = cleanUser(user);
+                cleaned.defaultHousehold = household;
+                return res.json({ status: "success", data: { user: cleaned } });
+            }
+        }
+
+        res.json({ status: "success", data: { user: cleanUser(user) } });
     } catch (error) {
-        return res.status(500).json({ error: "Server error" })
+        return res.status(500).json({ error: "Server error" });
     }
 }
 
