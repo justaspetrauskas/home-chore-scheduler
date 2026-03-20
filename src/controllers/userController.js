@@ -1,3 +1,36 @@
+// Set default household for user
+const setDefaultHousehold = async (req, res) => {
+    const userId = req.user.id;
+    let { householdId } = req.body;
+
+    // If no householdId provided, auto-select if only one membership
+    if (!householdId) {
+        const memberships = await prisma.householdMember.findMany({
+            where: { userId },
+            select: { householdId: true }
+        });
+        if (memberships.length === 1) {
+            householdId = memberships[0].householdId;
+        } else {
+            return res.status(400).json({ error: "householdId required unless only one membership exists" });
+        }
+    }
+
+    // Validate membership
+    const membership = await prisma.householdMember.findFirst({
+        where: { userId, householdId }
+    });
+    if (!membership) {
+        return res.status(403).json({ error: "User is not a member of this household" });
+    }
+
+    // Update user
+    await prisma.user.update({
+        where: { id: userId },
+        data: { defaultHouseholdId: householdId }
+    });
+    res.json({ status: "success", defaultHouseholdId: householdId });
+};
 import { prisma } from "../config/db.js"
 
 const getUser = (prisma) => async (req, res) => {
@@ -144,4 +177,4 @@ const deleteUser = async (req, res) => {
     }
   }
 
-export { getUser, getAllUsers, listHouseholds,updateUser, deleteUser, getMe }
+export { getUser, getAllUsers, listHouseholds, updateUser, deleteUser, getMe, setDefaultHousehold }

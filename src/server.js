@@ -44,6 +44,7 @@ app.use("/chores", choreRoutes)
 
 
 app.use("/rooms", roomRoutes)
+
 app.use("/users", userRoutes)
 
 

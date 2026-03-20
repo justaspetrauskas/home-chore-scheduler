@@ -5,7 +5,8 @@ import {
     getAllUsers,
     updateUser,
     deleteUser,
-    getMe
+    getMe,
+    setDefaultHousehold
 } from "../controllers/userController.js"
 
 
@@ -105,6 +106,8 @@ router.get('/me', getMe)
  */
 router.get('/:id', getUser)
 router.put('/:id', updateUser)
-router.delete('/:id', deleteUser)
+
+// Set default household
+router.post('/default-household', setDefaultHousehold)
 
 export default router

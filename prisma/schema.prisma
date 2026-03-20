@@ -25,6 +25,9 @@ model User {
   password  String
   createdAt DateTime @default(now())
 
+  defaultHouseholdId String?
+  defaultHousehold   Household? @relation(fields: [defaultHouseholdId], references: [id])
+
   memberships     HouseholdMember[]
   taskAssignments TaskAssignment[]
   choresCreated   Chore[]
@@ -35,6 +38,8 @@ model Household {
   name      String
   ownerId   String
   createdAt DateTime @default(now())
+
+  defaultUsers User[]
 
   members HouseholdMember[]
   rooms   Room[]
