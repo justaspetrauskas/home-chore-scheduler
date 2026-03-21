@@ -5,13 +5,18 @@ import {
     getRoomsByHousehold,
     getRoomById,
     updateRoom,
-    deleteRoom
+    deleteRoom,
+    getRoomTypes
 } from "../controllers/roomController.js"
 
 const router = express.Router()
 
 // all routes require authentication
 router.use(authMiddleware)
+
+
+// get all room types
+router.get('/types', getRoomTypes)
 
 // create a new room
 router.post('/', createRoom)

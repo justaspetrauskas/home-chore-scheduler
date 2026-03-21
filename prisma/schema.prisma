@@ -66,7 +66,22 @@ model Room {
   createdAt   DateTime         @default(now())
   tasks       TaskAssignment[]
   chores      Chore[]
+
+  roomTypeId   String?
+  roomType     RoomType? @relation(fields: [roomTypeId], references: [id])
 }
+
+model RoomType {
+  id        String   @id @default(cuid())
+  key       String   @unique // "bedroom", "kitchen", etc.
+  label     String   // "Bedroom"
+  isDefault Boolean  @default(true)
+  createdAt DateTime @default(now())
+  rooms     Room[]
+}
+
+// Suggested keys for RoomType:
+// "bedroom", "living_room", "kitchen", "bathroom", "dining_room", "office", "garage", "laundry_room", "storage", "balcony", "hallway", "other"
 
 model Chore {
   id          String  @id @default(uuid())

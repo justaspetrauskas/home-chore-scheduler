@@ -159,4 +159,22 @@ const deleteRoom = async (req, res) => {
     }
 }
 
-export { createRoom, getRoomsByHousehold, getRoomById, updateRoom, deleteRoom }
+// Get all room types
+const getRoomTypes = async (req, res) => {
+    try {
+        const roomTypes = await prisma.roomType.findMany({
+            select: {
+                id: true,
+                key: true,
+                label: true,
+                isDefault: true,
+                createdAt: true
+            }
+        })
+        res.json({ status: "success", data: { roomTypes } })
+    } catch (error) {
+        res.status(500).json({ error: error.message })
+    }
+}
+
+export { createRoom, getRoomsByHousehold, getRoomById, updateRoom, deleteRoom, getRoomTypes }

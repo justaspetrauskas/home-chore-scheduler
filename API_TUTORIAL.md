@@ -1,67 +1,112 @@
-# Home Chore Scheduler API Tutorial
+# Home Chore Scheduler API: Controllers, Middleware, and Routes Explained
 
-Welcome to the Home Chore Scheduler API! This backend service helps manage chores, users, households, rooms, and cleaning events for shared living spaces. Below you'll find an overview of how the API is structured and how to use it.
+## Controllers
 
-## Overview
-- **Authentication:** JWT-based, required for most endpoints.
-- **Resources:** Users, Households, Rooms, Chores, Cleaning Events, Task Assignments.
-- **API Docs:** Interactive Swagger UI at `/api-docs` when running in development mode.
+### authController.js
+Handles user authentication:
+- **register**: Registers a new user, hashes password, checks for duplicate emails.
+- **login**: Authenticates user, verifies password, issues JWT token.
+- **logout**: Ends user session (token removal/invalid).
+- **Security**: Uses generic error messages, never exposes sensitive info.
 
-## Authentication
-- Register: `POST /auth/register` — Create a new user account.
-- Login: `POST /auth/login` — Obtain a JWT token.
-- Logout: `POST /auth/logout` — Invalidate the session (client-side token removal).
+### userController.js
+Manages user profile and settings:
+- **getMe**: Returns authenticated user's profile, memberships (with household names), and cleaning events for their default household. If no default, uses the newest household.
+- **setDefaultHousehold**: Allows user to set their default household.
+- **CRUD**: Update/delete user (self only), strict access control.
+- **Cleans**: Removes sensitive fields from responses.
 
-## Users
-- List users: `GET /users` (auth required)
-- Get current user: `GET /users/me` (auth required)
-- Get user by ID: `GET /users/{id}` (auth required, only self)
-- Update user: `PUT /users/{id}` (auth required, only self)
-- Delete user: `DELETE /users/{id}` (auth required, only self)
+### householdController.js
+Manages household lifecycle:
+- **createHousehold**: Creates a household, sets creator as ADMIN.
+- **getUserHouseholds**: Lists all households for user, including members, rooms, and events.
+- **getHouseholdById**: Gets a household by ID, with members, rooms, and events.
+- **inviteMember**: Adds a user to a household.
+- **removeMember**: Removes a user from a household.
+- **deleteHousehold**: Only owner can delete; deletes memberships first to avoid FK errors.
+- **setDefaultHouseholdForUser**: Lets user set a household as their default.
 
-## Households
-- Create: `POST /households` (auth required)
-- List: `GET /households` (auth required)
-- Get by ID: `GET /households/{id}` (auth required)
-- Invite member: `POST /households/{householdId}/invite` (auth required)
-- Remove member: `DELETE /households/{householdId}/members/{userId}` (auth required)
+### roomController.js
+Manages rooms within households:
+- **CRUD**: Create, read, update, delete rooms.
+- **Access**: Only household members can manage rooms.
+- **List**: List rooms by household.
 
-## Rooms
-- Create: `POST /rooms` (auth required)
-- List by household: `GET /rooms/household/{householdId}` (auth required)
-- Get by ID: `GET /rooms/{id}` (auth required)
-- Update: `PUT /rooms/{id}` (auth required)
-- Delete: `DELETE /rooms/{id}` (auth required)
+### choresController.js
+Manages chores:
+- **CRUD**: Create, update, delete, list, get by ID.
+- **Validation**: Uses Zod schemas for input validation.
+- **Permissions**: Only creator or admin can modify/delete.
 
-## Chores
-- List: `GET /chores`
-- Get by ID: `GET /chores/{id}`
-- Create: `POST /chores` (auth required)
-- Update: `PUT /chores/{id}` (auth required)
-- Delete: `DELETE /chores/{id}` (auth required)
-
-## Cleaning Events
-- List: `GET /cleaning-events` (auth required)
-	- Returns cleaning events where the user is a participant.
-	- Response: `{ status: "success", data: { events: [...] } }`
-- Create: `POST /cleaning-events` (auth required)
-	- Request body: `{ participantIds: [userId], choreIds: [choreId], scheduledAt: <date-time> }`
-	- Response: `{ status: "success", data: { event: {...}, assignments: [...] } }`
-
-## General Usage
-1. **Register and Login** to get your JWT token.
-2. **Authenticate** all requests (except register/login) with `Authorization: Bearer <token>`.
-3. **Explore** the API using Swagger UI at `/api-docs`.
-4. **Manage** users, households, rooms, chores, and events via the documented endpoints.
-
-## Example Workflow
-1. Register and log in to get a token.
-2. Create a household and invite members.
-3. Add rooms to the household.
-4. Create chores and assign them to rooms.
-5. Schedule cleaning events and assign tasks.
-6. Track completion and manage assignments.
+### cleaningEventController.js
+Manages cleaning events:
+- **createCleaningEvent**: Schedules event, assigns chores to users randomly, returns assignments.
+- **getCleaningEvents**: Lists events where user is a participant.
 
 ---
 
-For detailed request/response formats, see the Swagger UI or the OpenAPI schemas in the codebase.
+## Middleware
+
+### authMiddleware.js
+- Verifies JWT tokens from headers/cookies.
+- Attaches authenticated user to request.
+- Blocks access if authentication fails.
+
+### corsMiddleware.js
+- (If used) Configures CORS for cross-origin requests.
+
+### validateRequestMiddleware.js
+- Validates request bodies using Zod schemas.
+- Returns 400 errors for invalid input.
+
+---
+
+## API Routes
+
+### /auth
+- `POST /register` — Register a new user.
+- `POST /login` — Authenticate and receive a JWT.
+- `POST /logout` — End session.
+
+### /users
+- `GET /users` — List all users (auth required).
+- `GET /users/me` — Get current user profile, memberships, and cleaning events.
+- `PUT /users/:id` — Update user (self only).
+- `DELETE /users/:id` — Delete user (self only).
+- `POST /users/set-default-household` — Set default household.
+
+### /households
+- `POST /households` — Create a new household.
+- `GET /households` — List user’s households (with rooms/events).
+- `GET /households/:id` — Get household details (with rooms/events).
+- `POST /households/:householdId/invite` — Invite a user.
+- `DELETE /households/:householdId/members/:userId` — Remove a member.
+- `DELETE /households/:id` — Delete a household (owner only).
+- `POST /households/:householdId/set-default` — Set as user’s default household.
+
+### /rooms
+- `POST /rooms` — Create a room.
+- `GET /rooms/household/:householdId` — List rooms for a household.
+- `GET /rooms/:id` — Get room details.
+- `PUT /rooms/:id` — Update a room.
+- `DELETE /rooms/:id` — Delete a room.
+
+### /chores
+- `GET /chores` — List chores.
+- `GET /chores/:id` — Get chore details.
+- `POST /chores` — Create a chore.
+- `PUT /chores/:id` — Update a chore.
+- `DELETE /chores/:id` — Delete a chore.
+
+### /cleaning-events
+- `GET /cleaning-events` — List cleaning events for the user.
+- `POST /cleaning-events` — Create a new cleaning event and generate assignments.
+
+---
+
+## Interview-Ready Summary
+- Architecture separates business logic (controllers), validation (middlewares), and routing (routes).
+- Security is enforced at middleware and controller level.
+- Data returned is always cleaned of sensitive fields.
+- All endpoints are protected by authentication, and permissions are checked for sensitive actions.
+- The API is RESTful, modular, and follows best practices for error handling and data validation.

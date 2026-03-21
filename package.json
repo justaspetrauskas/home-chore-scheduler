@@ -10,6 +10,7 @@
     "worker": "node src/worker.js",
     "worker:setup": "npx graphile-worker --schema-only",
     "seed:chores": "node prisma/seed.js",
+    "seed:roomTypes": "node prisma/seedRoomTypes.js",
     "migrate": "prisma migrate dev",
     "generate": "prisma generate",
     "studio": "prisma studio",

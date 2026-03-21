@@ -60,15 +60,11 @@ const getUser = (prisma) => async (req, res) => {
         }
 
                 // Remove sensitive/unwanted fields
-                function cleanUser(u) {
+                function cleanUser(u, membershipsWithNames) {
                     if (!u) return u;
-                    const { password, defaultHouseholdId, ...rest } = u;
-                    // Clean memberships: only return householdId and role
-                    let memberships = rest.memberships;
-                    if (Array.isArray(memberships)) {
-                        memberships = memberships.map(m => ({ householdId: m.householdId, role: m.role }));
-                    }
-                    return { ...rest, memberships };
+                    const { password, defaultHouseholdId, memberships, ...rest } = u;
+                    // Use provided membershipsWithNames if available
+                    return { ...rest, memberships: membershipsWithNames || memberships };
                 }
 
                 // If only one membership and no defaultHousehold, set it automatically
@@ -124,15 +120,11 @@ const getUser = (prisma) => async (req, res) => {
 }
 
 const getMe = async (req, res) => {
-    function cleanUser(u) {
+    function cleanUser(u, membershipsWithNames) {
         if (!u) return u;
-        const { password, defaultHouseholdId, ...rest } = u;
-        // Clean memberships: only return householdId and role
-        let memberships = rest.memberships;
-        if (Array.isArray(memberships)) {
-            memberships = memberships.map(m => ({ householdId: m.householdId, role: m.role }));
-        }
-        return { ...rest, memberships };
+        const { password, defaultHouseholdId, memberships, ...rest } = u;
+        // Use provided membershipsWithNames if available
+        return { ...rest, memberships: membershipsWithNames || memberships };
     }
     try {
         const user = await prisma.user.findUnique({
@@ -144,7 +136,11 @@ const getMe = async (req, res) => {
                         name: true
                     }
                 },
-                memberships: true,
+                memberships: {
+                    include: {
+                        household: { select: { name: true } }
+                    }
+                },
                 taskAssignments: true,
                 choresCreated: true
             }
@@ -152,6 +148,90 @@ const getMe = async (req, res) => {
 
         if (!user) {
             return res.status(404).json({ error: "User not found" });
+        }
+
+        // Fetch cleaning events where user is assigned to any task and event belongs to defaultHousehold
+        let resolvedDefaultHousehold = user.defaultHousehold;
+        // Prepare memberships array with household name
+        const membershipsWithNames = Array.isArray(user.memberships)
+            ? user.memberships.map(m => ({
+                householdId: m.householdId,
+                role: m.role,
+                householdName: m.household?.name || null
+            }))
+            : [];
+
+        // If no defaultHousehold, set it as the newest household in memberships (by createdAt)
+        if (
+            user &&
+            Array.isArray(user.memberships) &&
+            !user.defaultHousehold &&
+            user.memberships.length > 0
+        ) {
+            // Find newest membership by createdAt (descending)
+            const newestMembership = user.memberships.reduce((latest, curr) => {
+                if (!latest) return curr;
+                if (!curr.createdAt) return latest;
+                if (!latest.createdAt) return curr;
+                return new Date(curr.createdAt) > new Date(latest.createdAt) ? curr : latest;
+            }, null);
+            if (newestMembership && newestMembership.householdId) {
+                // Fetch the household object
+                const household = await prisma.household.findUnique({
+                    where: { id: newestMembership.householdId },
+                    select: { id: true, name: true }
+                });
+                resolvedDefaultHousehold = household;
+                const cleaned = cleanUser(user, membershipsWithNames);
+                cleaned.defaultHousehold = household;
+                // Filter cleaning events using resolvedDefaultHousehold
+                let cleaningEvents = [];
+                if (resolvedDefaultHousehold && resolvedDefaultHousehold.id) {
+                    cleaningEvents = await prisma.cleaningEvent.findMany({
+                        where: {
+                            householdId: resolvedDefaultHousehold.id,
+                            tasks: {
+                                some: {
+                                    assignedToId: req.user.id
+                                }
+                            }
+                        },
+                        select: {
+                            id: true,
+                            title: true,
+                            date: true,
+                            householdId: true,
+                            createdById: true,
+                            createdAt: true
+                        }
+                    });
+                }
+                cleaned.cleaningEvents = cleaningEvents;
+                return res.json({ status: "success", data: { user: cleaned } });
+            }
+        }
+
+        // Filter cleaning events using resolvedDefaultHousehold
+        let cleaningEvents = [];
+        if (resolvedDefaultHousehold && resolvedDefaultHousehold.id) {
+            cleaningEvents = await prisma.cleaningEvent.findMany({
+                where: {
+                    householdId: resolvedDefaultHousehold.id,
+                    tasks: {
+                        some: {
+                            assignedToId: req.user.id
+                        }
+                    }
+                },
+                select: {
+                    id: true,
+                    title: true,
+                    date: true,
+                    householdId: true,
+                    createdById: true,
+                    createdAt: true
+                }
+            });
         }
 
         // If only one membership and no defaultHousehold, fetch and return it as defaultHousehold
@@ -170,11 +250,14 @@ const getMe = async (req, res) => {
                 });
                 const cleaned = cleanUser(user);
                 cleaned.defaultHousehold = household;
+                cleaned.cleaningEvents = cleaningEvents;
                 return res.json({ status: "success", data: { user: cleaned } });
             }
         }
 
-        res.json({ status: "success", data: { user: cleanUser(user) } });
+        const cleanedUser = cleanUser(user, membershipsWithNames);
+        cleanedUser.cleaningEvents = cleaningEvents;
+        res.json({ status: "success", data: { user: cleanedUser } });
     } catch (error) {
         return res.status(500).json({ error: "Server error" });
     }

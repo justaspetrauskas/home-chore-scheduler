@@ -1,3 +1,49 @@
+// Delete a household (only owner can delete)
+const deleteHousehold = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Check if user is the owner
+    const household = await prisma.household.findUnique({ where: { id } });
+    if (!household) return res.status(404).json({ error: 'Household not found' });
+    if (household.ownerId !== userId) {
+      return res.status(403).json({ error: 'Only the owner can delete the household' });
+    }
+
+    // Delete all related memberships first
+    await prisma.householdMember.deleteMany({ where: { householdId: id } });
+    // Now delete the household
+    await prisma.household.delete({ where: { id } });
+    res.json({ status: 'success', message: 'Household deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Set a household as the user's default household
+const setDefaultHouseholdForUser = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { householdId } = req.body;
+
+    // Check membership
+    const membership = await prisma.householdMember.findUnique({
+      where: { userId_householdId: { userId, householdId } }
+    });
+    if (!membership) {
+      return res.status(403).json({ error: 'User is not a member of this household' });
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { defaultHouseholdId: householdId }
+    });
+    res.json({ status: 'success', defaultHouseholdId: householdId });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 import { prisma } from "../config/db.js";
 
 // Create a new household
@@ -32,7 +78,11 @@ const getUserHouseholds = async (req, res) => {
       where: { userId },
       include: {
         household: {
-          include: { members: { include: { user: true } } }
+          include: {
+            members: { include: { user: true } },
+            rooms: true,
+            events: true
+          }
         }
       }
     });
@@ -50,7 +100,11 @@ const getHouseholdById = async (req, res) => {
 
     const household = await prisma.household.findUnique({
       where: { id },
-      include: { members: { include: { user: true } } }
+      include: {
+        members: { include: { user: true } },
+        rooms: true,
+        events: true
+      }
     });
 
     if (!household) return res.status(404).json({ error: 'Household not found' });
@@ -104,4 +158,4 @@ const removeMember = async (req, res) => {
   }
 };
 
-export { createHousehold, getUserHouseholds, getHouseholdById, inviteMember, removeMember };
+export { createHousehold, getUserHouseholds, getHouseholdById, inviteMember, removeMember, deleteHousehold, setDefaultHouseholdForUser };

@@ -257,6 +257,46 @@ const options = {
           responses: { 200: { description: "Room created" } },
         },
       },
+      "/rooms/types": {
+        get: {
+          tags: ["Rooms"],
+          summary: "Get all room types",
+          description: "Controller: getRoomTypes",
+          responses: {
+            200: {
+              description: "List of room types",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      status: { type: "string" },
+                      data: {
+                        type: "object",
+                        properties: {
+                          roomTypes: {
+                            type: "array",
+                            items: {
+                              type: "object",
+                              properties: {
+                                id: { type: "string" },
+                                key: { type: "string" },
+                                label: { type: "string" },
+                                isDefault: { type: "boolean" },
+                                createdAt: { type: "string", format: "date-time" }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       "/rooms/household/{householdId}": {
         get: {
           tags: ["Rooms"],

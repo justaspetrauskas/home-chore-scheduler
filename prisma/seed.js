@@ -1,3 +1,18 @@
+// Default room types to seed
+const defaultRoomTypes = [
+  { key: "bedroom", label: "Bedroom" },
+  { key: "living_room", label: "Living Room" },
+  { key: "kitchen", label: "Kitchen" },
+  { key: "bathroom", label: "Bathroom" },
+  { key: "dining_room", label: "Dining Room" },
+  { key: "office", label: "Office" },
+  { key: "garage", label: "Garage" },
+  { key: "laundry_room", label: "Laundry Room" },
+  { key: "storage", label: "Storage" },
+  { key: "balcony", label: "Balcony" },
+  { key: "hallway", label: "Hallway" },
+  { key: "other", label: "Other" }
+];
 import 'dotenv/config'
 import { PrismaPg } from '@prisma/adapter-pg'
 import {PrismaClient} from '@prisma/client';
@@ -118,6 +133,19 @@ const testChores = [
 ];
 
 const main = async () => {
+      // Seed default room types
+      for (const rt of defaultRoomTypes) {
+        await prisma.roomType.upsert({
+          where: { key: rt.key },
+          update: {},
+          create: {
+            key: rt.key,
+            label: rt.label,
+            isDefault: true
+          }
+        });
+        console.log("Seeded room type: " + rt.label);
+      }
     console.log("Seeding DB")
 
     // Create user
