@@ -85,11 +85,20 @@ const options = {
           type: "object",
           properties: {
             id: { type: "string", format: "uuid" },
-            title: { type: "string" },
-            date: { type: "string", format: "date-time" },
             householdId: { type: "string", format: "uuid" },
-            createdById: { type: "string", format: "uuid" },
+            name: { type: "string" },
+            eventDate: { type: "string", format: "date-time" },
+            notificationDate: { type: "string", format: "date-time" },
+            distributionMode: { type: "string", enum: ["random", "balanced"] },
+            recurrenceRule: { type: "string", enum: ["none", "weekly", "biweekly", "monthly"] },
+            notifyParticipants: { type: "boolean" },
+            status: {
+              type: "string",
+              enum: ["draft", "scheduled", "in_progress", "completed", "canceled"],
+            },
+            createdByUserId: { type: "string", format: "uuid" },
             createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
             tasks: { type: "array", items: { type: "string" }, description: "Array of TaskAssignment IDs" }
           },
         },
@@ -99,8 +108,10 @@ const options = {
             id: { type: "string", format: "uuid" },
             eventId: { type: "string", format: "uuid" },
             roomId: { type: "string", format: "uuid" },
-            choreId: { type: "string", format: "uuid" },
-            assignedToId: { type: "string", format: "uuid", nullable: true }
+            assignedToId: { type: "string", format: "uuid", nullable: true },
+            date: { type: "string", format: "date-time" },
+            status: { type: "string", enum: ["scheduled", "completed", "post_due"] },
+            completedAt: { type: "string", format: "date-time", nullable: true }
           },
         }
       }
@@ -379,7 +390,7 @@ const options = {
         get: {
           tags: ["CleaningEvents"],
           summary: "Get cleaning events for user",
-          description: "Returns cleaning events where the user is a participant. Controller: getCleaningEvents",
+          description: "Returns cleaning events for households where the authenticated user is a member, including per-event insights and aggregate statistics for dashboards. Controller: getCleaningEvents",
           security: [{ bearerAuth: [] }],
           responses: {
             200: {
@@ -396,6 +407,58 @@ const options = {
                           events: {
                             type: "array",
                             items: { $ref: "#/components/schemas/CleaningEvent" }
+                          },
+                          insights: {
+                            type: "object",
+                            properties: {
+                              totals: {
+                                type: "object",
+                                properties: {
+                                  events: { type: "integer" },
+                                  participants: { type: "integer" },
+                                  taskAssignments: { type: "integer" },
+                                  completedTaskAssignments: { type: "integer" },
+                                  scheduledTaskAssignments: { type: "integer" },
+                                  postDueTaskAssignments: { type: "integer" },
+                                  upcomingEvents: { type: "integer" },
+                                  todayEvents: { type: "integer" },
+                                  completionRate: { type: "number", format: "float" }
+                                }
+                              },
+                              statusBreakdown: {
+                                type: "object",
+                                additionalProperties: { type: "integer" }
+                              },
+                              distributionModeBreakdown: {
+                                type: "object",
+                                additionalProperties: { type: "integer" }
+                              },
+                              recurrenceBreakdown: {
+                                type: "object",
+                                additionalProperties: { type: "integer" }
+                              },
+                              dateRange: {
+                                type: "object",
+                                properties: {
+                                  firstEventDate: { type: "string", format: "date-time", nullable: true },
+                                  lastEventDate: { type: "string", format: "date-time", nullable: true }
+                                }
+                              },
+                              householdBreakdown: {
+                                type: "array",
+                                items: {
+                                  type: "object",
+                                  properties: {
+                                    householdId: { type: "string", format: "uuid" },
+                                    events: { type: "integer" },
+                                    participants: { type: "integer" },
+                                    taskAssignments: { type: "integer" },
+                                    completedTaskAssignments: { type: "integer" },
+                                    completionRate: { type: "number", format: "float" }
+                                  }
+                                }
+                              }
+                            }
                           }
                         }
                       }
@@ -409,7 +472,7 @@ const options = {
         post: {
           tags: ["CleaningEvents"],
           summary: "Create cleaning event",
-          description: "Creates a new cleaning event and generates random assignments. Controller: createCleaningEvent",
+          description: "Creates a new cleaning event. Controller: createCleaningEvent",
           security: [{ bearerAuth: [] }],
           requestBody: {
             required: true,
@@ -418,11 +481,41 @@ const options = {
                 schema: {
                   type: "object",
                   properties: {
-                    participantIds: { type: "array", items: { type: "string", format: "uuid" } },
-                    choreIds: { type: "array", items: { type: "string", format: "uuid" } },
-                    scheduledAt: { type: "string", format: "date-time" }
+                    householdId: { type: "string", format: "uuid" },
+                    name: { type: "string" },
+                    eventDate: { type: "string", format: "date-time" },
+                    notificationDate: { type: "string", format: "date-time" },
+                    distributionMode: { type: "string", enum: ["random", "balanced"], default: "balanced" },
+                    recurrenceRule: { type: "string", enum: ["none", "weekly", "biweekly", "monthly"] },
+                    notifyParticipants: { type: "boolean" },
+                    status: {
+                      type: "string",
+                      enum: ["draft", "scheduled", "in_progress", "completed", "canceled"],
+                      default: "scheduled",
+                    },
+                    participantIds: {
+                      type: "array",
+                      items: { type: "string", format: "uuid" },
+                      description: "List of household member IDs (or user IDs) participating in the event"
+                    },
+                    roomIds: {
+                      type: "array",
+                      items: {
+                        type: "string",
+                        format: "uuid"
+                      }
+                    }
                   },
-                  required: ["participantIds", "choreIds", "scheduledAt"]
+                  required: [
+                    "householdId",
+                    "name",
+                    "eventDate",
+                    "notificationDate",
+                    "recurrenceRule",
+                    "notifyParticipants",
+                    "participantIds",
+                    "roomIds"
+                  ]
                 }
               }
             }
@@ -439,11 +532,7 @@ const options = {
                       data: {
                         type: "object",
                         properties: {
-                          event: { $ref: "#/components/schemas/CleaningEvent" },
-                          assignments: {
-                            type: "array",
-                            items: { $ref: "#/components/schemas/TaskAssignment" }
-                          }
+                          event: { $ref: "#/components/schemas/CleaningEvent" }
                         }
                       }
                     }
@@ -453,6 +542,152 @@ const options = {
             }
           }
         },
+      },
+      "/cleaning-events/{id}": {
+        patch: {
+          tags: ["CleaningEvents"],
+          summary: "Update cleaning event",
+          description: "Partially updates an existing cleaning event. Controller: updateCleaningEvent",
+          security: [{ bearerAuth: [] }],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" },
+              description: "Cleaning event ID",
+            }
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    name: { type: "string" },
+                    eventDate: { type: "string", format: "date-time" },
+                    notificationDate: { type: "string", format: "date-time" },
+                    distributionMode: { type: "string", enum: ["random", "balanced"] },
+                    recurrenceRule: { type: "string", enum: ["none", "weekly", "biweekly", "monthly"] },
+                    notifyParticipants: { type: "boolean" },
+                    status: {
+                      type: "string",
+                      enum: ["draft", "scheduled", "in_progress", "completed", "canceled"],
+                    }
+                  },
+                  minProperties: 1
+                }
+              }
+            }
+          },
+          responses: {
+            200: {
+              description: "Cleaning event updated",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      status: { type: "string" },
+                      data: {
+                        type: "object",
+                        properties: {
+                          event: { $ref: "#/components/schemas/CleaningEvent" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            404: { description: "Cleaning event not found" },
+            403: { description: "Not authorized for this household" }
+          }
+        },
+        delete: {
+          tags: ["CleaningEvents"],
+          summary: "Delete cleaning event",
+          description: "Deletes a cleaning event. Allowed for event creator or household admin only. Related task assignments and participants are removed, but users and rooms are not deleted.",
+          security: [{ bearerAuth: [] }],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" },
+              description: "Cleaning event ID",
+            }
+          ],
+          responses: {
+            200: {
+              description: "Cleaning event deleted",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      status: { type: "string" },
+                      message: { type: "string" }
+                    }
+                  }
+                }
+              }
+            },
+            404: { description: "Cleaning event not found" },
+            403: { description: "Only creator or admin can delete" }
+          }
+        }
+      },
+      "/task-assignments/{id}/complete": {
+        post: {
+          tags: ["TaskAssignments"],
+          summary: "Complete task assignment",
+          description: "Marks a task assignment as completed and stores the completion timestamp. Allowed for the assigned user or household admin.",
+          security: [{ bearerAuth: [] }],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" },
+              description: "Task assignment ID",
+            }
+          ],
+          responses: {
+            200: {
+              description: "Task assignment completed",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      status: { type: "string" },
+                      data: {
+                        type: "object",
+                        properties: {
+                          taskAssignment: {
+                            type: "object",
+                            properties: {
+                              id: { type: "string", format: "uuid" },
+                              assignedToUserId: { type: "string", format: "uuid", nullable: true },
+                              room: { $ref: "#/components/schemas/Room" },
+                              date: { type: "string", format: "date-time" },
+                              status: { type: "string", enum: ["scheduled", "completed", "post_due"] },
+                              completedAt: { type: "string", format: "date-time", nullable: true }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            403: { description: "Only assigned user or admin can complete" },
+            404: { description: "Task assignment not found" }
+          }
+        }
       },
     },
   },

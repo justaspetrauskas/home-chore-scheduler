@@ -120,11 +120,59 @@ const getUser = (prisma) => async (req, res) => {
 }
 
 const getMe = async (req, res) => {
+    function formatUserTaskAssignments(taskAssignments) {
+        return (taskAssignments || []).map((task) => ({
+            id: task.id,
+            eventId: task.eventId,
+            assignedToUserId: task.assignedToId,
+            roomName: task.room?.name || null,
+            room: task.room,
+            date: task.date,
+            status: task.status,
+            completedAt: task.completedAt,
+        }));
+    }
+
     function cleanUser(u, membershipsWithNames) {
         if (!u) return u;
         const { password, defaultHouseholdId, memberships, ...rest } = u;
         // Use provided membershipsWithNames if available
-        return { ...rest, memberships: membershipsWithNames || memberships };
+        return {
+            ...rest,
+            memberships: membershipsWithNames || memberships,
+            taskAssignments: formatUserTaskAssignments(rest.taskAssignments),
+        };
+    }
+
+    function formatCleaningEvents(events, memberships) {
+        const membershipByHouseholdAndUser = new Map(
+            memberships.map((membership) => [
+                `${membership.householdId}:${membership.userId}`,
+                membership.id,
+            ])
+        );
+
+        return events.map((event) => ({
+            id: event.id,
+            name: event.name,
+            eventDate: event.eventDate,
+            status: event.status,
+            householdId: event.householdId,
+            createdByUserId: event.createdByUserId,
+            createdAt: event.createdAt,
+            participants: (event.participants || [])
+                .map((participant) => membershipByHouseholdAndUser.get(`${event.householdId}:${participant.userId}`))
+                .filter(Boolean),
+            taskAssignments: (event.tasks || []).map((task) => ({
+                id: task.id,
+                assignedToUserId: task.assignedToId,
+                roomName: task.room?.name || null,
+                room: task.room,
+                date: task.date,
+                status: task.status,
+                completedAt: task.completedAt,
+            })),
+        }));
     }
     try {
         const user = await prisma.user.findUnique({
@@ -141,7 +189,22 @@ const getMe = async (req, res) => {
                         household: { select: { name: true } }
                     }
                 },
-                taskAssignments: true,
+                taskAssignments: {
+                    select: {
+                        id: true,
+                        eventId: true,
+                        assignedToId: true,
+                        date: true,
+                        status: true,
+                        completedAt: true,
+                        room: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                    },
+                },
                 choresCreated: true
             }
         });
@@ -155,6 +218,8 @@ const getMe = async (req, res) => {
         // Prepare memberships array with household name
         const membershipsWithNames = Array.isArray(user.memberships)
             ? user.memberships.map(m => ({
+                id: m.id,
+                userId: m.userId,
                 householdId: m.householdId,
                 role: m.role,
                 householdName: m.household?.name || null
@@ -190,23 +255,41 @@ const getMe = async (req, res) => {
                     cleaningEvents = await prisma.cleaningEvent.findMany({
                         where: {
                             householdId: resolvedDefaultHousehold.id,
-                            tasks: {
-                                some: {
-                                    assignedToId: req.user.id
-                                }
-                            }
                         },
                         select: {
                             id: true,
-                            title: true,
-                            date: true,
+                            name: true,
+                            eventDate: true,
+                            status: true,
                             householdId: true,
-                            createdById: true,
-                            createdAt: true
-                        }
+                            createdByUserId: true,
+                            createdAt: true,
+                            participants: {
+                                select: {
+                                    userId: true,
+                                },
+                            },
+                            tasks: {
+                                select: {
+                                    id: true,
+                                    roomId: true,
+                                    assignedToId: true,
+                                    date: true,
+                                    status: true,
+                                    completedAt: true,
+                                    room: {
+                                        select: {
+                                            id: true,
+                                            name: true,
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        orderBy: { eventDate: "desc" }
                     });
                 }
-                cleaned.cleaningEvents = cleaningEvents;
+                cleaned.cleaningEvents = formatCleaningEvents(cleaningEvents, user.memberships || []);
                 return res.json({ status: "success", data: { user: cleaned } });
             }
         }
@@ -217,20 +300,38 @@ const getMe = async (req, res) => {
             cleaningEvents = await prisma.cleaningEvent.findMany({
                 where: {
                     householdId: resolvedDefaultHousehold.id,
-                    tasks: {
-                        some: {
-                            assignedToId: req.user.id
-                        }
-                    }
                 },
                 select: {
                     id: true,
-                    title: true,
-                    date: true,
+                    name: true,
+                    eventDate: true,
+                    status: true,
                     householdId: true,
-                    createdById: true,
-                    createdAt: true
-                }
+                    createdByUserId: true,
+                    createdAt: true,
+                    participants: {
+                        select: {
+                            userId: true,
+                        },
+                    },
+                    tasks: {
+                        select: {
+                            id: true,
+                            roomId: true,
+                            assignedToId: true,
+                            date: true,
+                            status: true,
+                            completedAt: true,
+                            room: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                },
+                            },
+                        },
+                    },
+                },
+                orderBy: { eventDate: "desc" }
             });
         }
 
@@ -250,13 +351,13 @@ const getMe = async (req, res) => {
                 });
                 const cleaned = cleanUser(user);
                 cleaned.defaultHousehold = household;
-                cleaned.cleaningEvents = cleaningEvents;
+                cleaned.cleaningEvents = formatCleaningEvents(cleaningEvents, user.memberships || []);
                 return res.json({ status: "success", data: { user: cleaned } });
             }
         }
 
         const cleanedUser = cleanUser(user, membershipsWithNames);
-        cleanedUser.cleaningEvents = cleaningEvents;
+        cleanedUser.cleaningEvents = formatCleaningEvents(cleaningEvents, user.memberships || []);
         res.json({ status: "success", data: { user: cleanedUser } });
     } catch (error) {
         return res.status(500).json({ error: "Server error" });

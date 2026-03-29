@@ -18,6 +18,32 @@ enum Role {
   EVENT_MANAGER
 }
 
+enum DistributionMode {
+  random
+  balanced
+}
+
+enum RecurrenceRule {
+  none
+  weekly
+  biweekly
+  monthly
+}
+
+enum CleaningEventStatus {
+  draft
+  scheduled
+  in_progress
+  completed
+  canceled
+}
+
+enum TaskAssignmentStatus {
+  scheduled
+  completed
+  post_due
+}
+
 model User {
   id        String   @id @default(uuid())
   name      String
@@ -31,6 +57,8 @@ model User {
   memberships     HouseholdMember[]
   taskAssignments TaskAssignment[]
   choresCreated   Chore[]
+  cleaningEventsCreated CleaningEvent[] @relation("CleaningEventCreator")
+  cleaningEventParticipations CleaningEventParticipant[]
 }
 
 model Household {
@@ -100,24 +128,45 @@ model Chore {
 }
 
 model CleaningEvent {
-  id          String           @id @default(uuid())
-  title       String
-  date        DateTime
-  householdId String
-  household   Household        @relation(fields: [householdId], references: [id])
-  createdById String
-  createdAt   DateTime         @default(now())
-  tasks       TaskAssignment[]
+  id                 String              @id @default(uuid())
+  householdId        String
+  household          Household           @relation(fields: [householdId], references: [id])
+  name               String
+  eventDate          DateTime
+  notificationDate   DateTime
+  distributionMode   DistributionMode    @default(balanced)
+  recurrenceRule     RecurrenceRule      @default(none)
+  notifyParticipants Boolean             @default(true)
+  status             CleaningEventStatus @default(scheduled)
+  createdByUserId    String
+  createdByUser      User                @relation("CleaningEventCreator", fields: [createdByUserId], references: [id])
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  tasks              TaskAssignment[]
+  participants       CleaningEventParticipant[]
+}
+
+model CleaningEventParticipant {
+  id      String        @id @default(uuid())
+  eventId String
+  userId  String
+  event   CleaningEvent @relation(fields: [eventId], references: [id])
+  user    User          @relation(fields: [userId], references: [id])
+
+  @@unique([eventId, userId])
 }
 
 model TaskAssignment {
-  id           String        @id @default(uuid())
+  id           String               @id @default(uuid())
   eventId      String
   roomId       String
-  choreId      String
+  choreId      String?
   assignedToId String?
-  event        CleaningEvent @relation(fields: [eventId], references: [id])
-  room         Room          @relation(fields: [roomId], references: [id])
-  chore        Chore         @relation(fields: [choreId], references: [id])
-  assignedTo   User?         @relation(fields: [assignedToId], references: [id])
+  date         DateTime
+  status       TaskAssignmentStatus @default(scheduled)
+  completedAt  DateTime?
+  event        CleaningEvent        @relation(fields: [eventId], references: [id])
+  room         Room                 @relation(fields: [roomId], references: [id])
+  chore        Chore?               @relation(fields: [choreId], references: [id])
+  assignedTo   User?                @relation(fields: [assignedToId], references: [id])
 }
