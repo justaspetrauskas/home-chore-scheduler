@@ -99,7 +99,44 @@ const options = {
             createdByUserId: { type: "string", format: "uuid" },
             createdAt: { type: "string", format: "date-time" },
             updatedAt: { type: "string", format: "date-time" },
-            tasks: { type: "array", items: { type: "string" }, description: "Array of TaskAssignment IDs" }
+            participants: {
+              type: "array",
+              items: { type: "string", format: "uuid" },
+              description: "Array of household member IDs participating in this event"
+            },
+            taskAssignments: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  id: { type: "string", format: "uuid" },
+                  assignedToUserId: { type: "string", format: "uuid", nullable: true },
+                  room: {
+                    type: "object",
+                    nullable: true,
+                    properties: {
+                      id: { type: "string", format: "uuid" },
+                      name: { type: "string" }
+                    }
+                  },
+                  date: { type: "string", format: "date-time" },
+                  status: { type: "string", enum: ["scheduled", "completed", "post_due"] },
+                  completedAt: { type: "string", format: "date-time", nullable: true }
+                }
+              }
+            },
+            insights: {
+              type: "object",
+              properties: {
+                participantsCount: { type: "integer" },
+                taskAssignmentsCount: { type: "integer" },
+                completedTaskAssignments: { type: "integer" },
+                scheduledTaskAssignments: { type: "integer" },
+                postDueTaskAssignments: { type: "integer" },
+                uniqueAssignedUsersCount: { type: "integer" },
+                completionRate: { type: "number", format: "float" }
+              }
+            }
           },
         },
         TaskAssignment: {
