@@ -130,34 +130,40 @@ const updateRoom = async (req, res) => {
     }
 }
 
-// Delete a room
+// Delete a room and cascade delete related chores and task assignments
 const deleteRoom = async (req, res) => {
-    const { id } = req.params
-    const userId = req.user.id
+    const { id } = req.params;
+    const userId = req.user.id;
 
     try {
         const room = await prisma.room.findUnique({
             where: { id },
             include: { household: { include: { members: true } } }
-        })
+        });
 
         if (!room) {
-            return res.status(404).json({ error: "Room not found" })
+            return res.status(404).json({ error: "Room not found" });
         }
 
         // Check membership
-        const isMember = room.household.members.some(member => member.userId === userId)
+        const isMember = room.household.members.some(member => member.userId === userId);
         if (!isMember) {
-            return res.status(403).json({ error: "Not authorized to delete this room" })
+            return res.status(403).json({ error: "Not authorized to delete this room" });
         }
 
-        await prisma.room.delete({ where: { id } })
+        // Delete related task assignments
+        await prisma.taskAssignment.deleteMany({ where: { roomId: id } });
+        // Delete related chores
+        await prisma.chore.deleteMany({ where: { roomId: id } });
 
-        res.json({ status: "success", message: "Room deleted successfully" })
+        // Delete the room itself
+        await prisma.room.delete({ where: { id } });
+
+        res.json({ status: "success", message: "Room and related data deleted successfully" });
     } catch (error) {
-        res.status(500).json({ error: error.message })
+        res.status(500).json({ error: error.message });
     }
-}
+};
 
 // Get all room types
 const getRoomTypes = async (req, res) => {

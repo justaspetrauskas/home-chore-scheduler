@@ -1,4 +1,6 @@
 import express from 'express'
+import { createServer } from "node:http";
+import { Server } from "socket.io";
 import { config } from "dotenv"
 import swaggerUi from "swagger-ui-express";
 import { connectDB, disconnectDB } from './config/db.js'
@@ -19,6 +21,7 @@ connectDB();
 
 
 const app = express()
+const server = createServer(app);
 
 // CORS middleware
 const corsOptions = {
@@ -31,6 +34,20 @@ const corsOptions = {
 if (process.env.NODE_ENV === "development") {
   app.use(cors(corsOptions));
 }
+
+const io = new Server(server, {
+  cors: corsOptions,
+});
+
+app.set("io", io);
+
+io.on("connection", (socket) => {
+  console.log(`Socket connected: ${socket.id}`);
+
+  socket.on("disconnect", () => {
+    console.log(`Socket disconnected: ${socket.id}`);
+  });
+});
 
 // Body parsing and cookie parsing middleware
 app.use(express.json())
@@ -55,7 +72,7 @@ if (process.env.NODE_ENV === "development") {
 
 const PORT = 5050;
 
-app.listen(PORT,()=>{
+server.listen(PORT,()=>{
     console.log(`server is listening on PORT ${PORT}`)
 })
 

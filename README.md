@@ -41,10 +41,9 @@ root/
 ## Key Technologies
 - **Node.js** (ES modules)
 - **Express.js** (API framework)
+- **Socket.IO** (real-time server events)
 - **PostgreSQL** (database)
 - **Prisma ORM** (database modeling and queries)
-- **Graphile Worker** (background job processing)
-- **Nodemon** (development hot-reload)
 
 ---
 
@@ -60,10 +59,10 @@ root/
 
 ## How It Works
 - **API**: Exposes REST endpoints for managing users, chores, rooms, events, and assignments.
+- **Realtime**: Socket.IO runs on the same HTTP server and allows broadcasting live updates to connected clients.
 - **Controllers**: Handle business logic, call Prisma for DB operations.
 - **Services**: Shared logic (e.g., random assignment) used by both API and worker.
 - **Worker**: Listens for background jobs (e.g., randomizeAssignments) and processes them using the same logic as the API.
-
 ---
 
 ## Development Workflow

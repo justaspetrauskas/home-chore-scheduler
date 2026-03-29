@@ -141,7 +141,57 @@ const inviteMember = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-};
+}
+
+// Create a room for a household (with optional auto-naming)
+const createRoomForHousehold = async (req, res) => {
+  try {
+    const { householdId } = req.params;
+    const { name, roomTypeId } = req.body;
+    const userId = req.user.id;
+
+    // Check if user is a member of the household
+    const membership = await prisma.householdMember.findUnique({
+      where: { userId_householdId: { userId, householdId } }
+    });
+    if (!membership) {
+      return res.status(403).json({ error: "Not a member of this household" });
+    }
+
+    let finalName = name;
+    // Auto-generate name if not provided
+    if (!finalName && roomTypeId) {
+      const count = await prisma.room.count({
+        where: { householdId, roomTypeId },
+      });
+      const roomType = await prisma.roomType.findUnique({
+        where: { id: roomTypeId },
+      });
+      if (roomType) {
+        finalName = `${roomType.label} ${count + 1}`;
+      }
+    }
+    if (!finalName) {
+      return res.status(400).json({ error: "Name is required" });
+    }
+    const room = await prisma.room.create({
+      data: {
+        name: finalName,
+        householdId,
+        roomTypeId: roomTypeId || null,
+        createdById: userId
+      },
+      include: {
+        roomType: true,
+      },
+    });
+    res.status(201).json({ status: "success", data: { room } });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+
 
 // Remove a member from household
 const removeMember = async (req, res) => {
@@ -158,4 +208,59 @@ const removeMember = async (req, res) => {
   }
 };
 
-export { createHousehold, getUserHouseholds, getHouseholdById, inviteMember, removeMember, deleteHousehold, setDefaultHouseholdForUser };
+
+// Bulk create rooms for a household
+const createRoomsBulk = async (req, res) => {
+  try {
+    const { householdId } = req.params;
+    const { rooms } = req.body;
+    const userId = req.user.id;
+
+    // Check if user is a member of the household
+    const membership = await prisma.householdMember.findUnique({
+      where: { userId_householdId: { userId, householdId } }
+    });
+    if (!membership) {
+      return res.status(403).json({ error: "Not a member of this household" });
+    }
+
+    const result = [];
+    for (const roomInput of rooms) {
+      const { name, roomTypeId } = roomInput;
+      let finalName = name;
+      if (!finalName && roomTypeId) {
+        const count = await prisma.room.count({ where: { householdId, roomTypeId } });
+        const roomType = await prisma.roomType.findUnique({ where: { id: roomTypeId } });
+        if (roomType) {
+          finalName = `${roomType.label} ${count + 1}`;
+        }
+      }
+      if (!finalName) continue;
+      const room = await prisma.room.create({
+        data: {
+          name: finalName,
+          householdId,
+          roomTypeId: roomTypeId || null,
+          createdById: userId
+        },
+        include: { roomType: true },
+      });
+      result.push(room);
+    }
+    res.status(201).json({ status: "success", data: { rooms: result } });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export {
+  createHousehold,
+  getUserHouseholds,
+  getHouseholdById,
+  inviteMember,
+  removeMember,
+  deleteHousehold,
+  setDefaultHouseholdForUser,
+  createRoomForHousehold,
+  createRoomsBulk
+};

@@ -7,7 +7,9 @@ import {
   inviteMember,
   removeMember,
   deleteHousehold,
-  setDefaultHouseholdForUser
+  setDefaultHouseholdForUser,
+  createRoomForHousehold,
+  createRoomsBulk
 } from "../controllers/householdController.js"
 
 const router = express.Router()
@@ -20,5 +22,9 @@ router.post('/:householdId/invite', inviteMember)
 router.delete('/:householdId/members/:userId', removeMember)
 router.delete('/:id', deleteHousehold)
 router.post('/:householdId/set-default', setDefaultHouseholdForUser)
+
+router.post('/:householdId/rooms', createRoomForHousehold)
+// Bulk create rooms for a household
+router.post('/:householdId/rooms/bulk', createRoomsBulk)
 
 export default router
