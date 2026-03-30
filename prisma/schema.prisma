@@ -57,6 +57,7 @@ model User {
   memberships     HouseholdMember[]
   taskAssignments TaskAssignment[]
   choresCreated   Chore[]
+  telegramAccount TelegramAccount?
   cleaningEventsCreated CleaningEvent[] @relation("CleaningEventCreator")
   cleaningEventParticipations CleaningEventParticipant[]
 }
@@ -83,6 +84,16 @@ model HouseholdMember {
   household   Household @relation(fields: [householdId], references: [id])
 
   @@unique([userId, householdId])
+}
+
+model TelegramAccount {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  telegramUserId  String
+  telegramChatId  String
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
 }
 
 model Room {
