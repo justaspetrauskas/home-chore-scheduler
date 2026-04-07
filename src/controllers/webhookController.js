@@ -33,7 +33,7 @@ const handleTelegramWebhook = async (req, res) => {
       if (text === "/start") {
         await telegram.sendMessage({
           chatId: message.chat.id,
-          text: "Bot connected. You will receive chore reminders here.",
+          text: "Bot connected! You will receive chore reminders here.",
         })
       }
     }
