@@ -186,71 +186,285 @@
           <a href="#home-chore-scheduler-api" data-depth="1">Home Chore Scheduler API</a>
 <a href="#overview" data-depth="2">Overview</a>
 <a href="#authentication" data-depth="2">Authentication</a>
+<a href="#post-authregister" data-depth="3">POST /auth/register</a>
+<a href="#post-authlogin" data-depth="3">POST /auth/login</a>
+<a href="#post-authlogout" data-depth="3">POST /auth/logout</a>
+<a href="#users" data-depth="2">Users</a>
+<a href="#get-users" data-depth="3">GET /users</a>
+<a href="#get-usersme" data-depth="3">GET /users/me</a>
+<a href="#get-usersid" data-depth="3">GET /users/:id</a>
+<a href="#put-usersid" data-depth="3">PUT /users/:id</a>
+<a href="#post-usersdefault-household" data-depth="3">POST /users/default-household</a>
 <a href="#households" data-depth="2">Households</a>
-<a href="#invitations" data-depth="2">Invitations</a>
-<a href="#create-invitation" data-depth="3">Create Invitation</a>
-<a href="#validate-invitation" data-depth="3">Validate Invitation</a>
+<a href="#post-households" data-depth="3">POST /households</a>
+<a href="#get-households" data-depth="3">GET /households</a>
+<a href="#get-householdsid" data-depth="3">GET /households/:id</a>
+<a href="#delete-householdsid" data-depth="3">DELETE /households/:id</a>
+<a href="#post-householdshouseholdidset-default" data-depth="3">POST /households/:householdId/set-default</a>
+<a href="#post-householdshouseholdidinvite" data-depth="3">POST /households/:householdId/invite</a>
+<a href="#post-householdidinvite" data-depth="3">POST /household/:id/invite</a>
+<a href="#delete-householdshouseholdidmembersuserid" data-depth="3">DELETE /households/:householdId/members/:userId</a>
+<a href="#post-householdshouseholdidrooms" data-depth="3">POST /households/:householdId/rooms</a>
+<a href="#post-householdshouseholdidroomsbulk" data-depth="3">POST /households/:householdId/rooms/bulk</a>
+<a href="#invite-validation-public" data-depth="2">Invite Validation (Public)</a>
+<a href="#get-invitetoken" data-depth="3">GET /invite/:token</a>
 <a href="#rooms" data-depth="2">Rooms</a>
+<a href="#get-roomstypes" data-depth="3">GET /rooms/types</a>
+<a href="#post-rooms" data-depth="3">POST /rooms</a>
+<a href="#get-roomshouseholdhouseholdid" data-depth="3">GET /rooms/household/:householdId</a>
+<a href="#get-roomsid" data-depth="3">GET /rooms/:id</a>
+<a href="#put-roomsid" data-depth="3">PUT /rooms/:id</a>
+<a href="#delete-roomsid" data-depth="3">DELETE /rooms/:id</a>
 <a href="#chores" data-depth="2">Chores</a>
+<a href="#get-chores" data-depth="3">GET /chores</a>
+<a href="#get-choresid" data-depth="3">GET /chores/:id</a>
+<a href="#post-chores" data-depth="3">POST /chores</a>
+<a href="#put-choresid" data-depth="3">PUT /chores/:id</a>
+<a href="#delete-choresid" data-depth="3">DELETE /chores/:id</a>
 <a href="#cleaning-events" data-depth="2">Cleaning Events</a>
+<a href="#get-cleaning-events" data-depth="3">GET /cleaning-events</a>
+<a href="#post-cleaning-events" data-depth="3">POST /cleaning-events</a>
+<a href="#patch-cleaning-eventsid" data-depth="3">PATCH /cleaning-events/:id</a>
+<a href="#delete-cleaning-eventsid" data-depth="3">DELETE /cleaning-events/:id</a>
         </aside>
 
         <article class="card doc">
           <h1 id="home-chore-scheduler-api">Home Chore Scheduler API</h1><h2 id="overview">Overview</h2><p>Express + Prisma + PostgreSQL backend for managing households, rooms, chores, cleaning events, and assignments.</p>
-<h2 id="authentication">Authentication</h2><ul>
-<li><code>POST /auth/register</code></li>
-<li><code>POST /auth/login</code></li>
-<li><code>POST /auth/logout</code></li>
+<h2 id="authentication">Authentication</h2><h3 id="post-authregister">POST /auth/register</h3><p>Request body:</p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;Alex&quot;,
+  &quot;email&quot;: &quot;alex@example.com&quot;,
+  &quot;password&quot;: &quot;StrongPassword123&quot;
+}
+</code></pre>
+<h3 id="post-authlogin">POST /auth/login</h3><p>Request body:</p>
+<pre><code class="language-json">{
+  &quot;email&quot;: &quot;alex@example.com&quot;,
+  &quot;password&quot;: &quot;StrongPassword123&quot;
+}
+</code></pre>
+<h3 id="post-authlogout">POST /auth/logout</h3><p>No request body.</p>
+<h2 id="users">Users</h2><h3 id="get-users">GET /users</h3><p>No request body.</p>
+<h3 id="get-usersme">GET /users/me</h3><p>No request body.</p>
+<h3 id="get-usersid">GET /users/:id</h3><p>Path params:</p>
+<ul>
+<li>id: user id</li>
 </ul>
-<h2 id="households">Households</h2><ul>
-<li><code>POST /households</code></li>
-<li><code>GET /households</code></li>
-<li><code>GET /households/:id</code></li>
-<li><code>DELETE /households/:id</code></li>
-<li><code>POST /households/:householdId/set-default</code></li>
+<h3 id="put-usersid">PUT /users/:id</h3><p>Path params:</p>
+<ul>
+<li>id: user id</li>
 </ul>
-<h2 id="invitations">Invitations</h2><h3 id="create-invitation">Create Invitation</h3><ul>
-<li><code>POST /household/:id/invite</code></li>
-<li>Body:</li>
+<p>Request body:</p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;Updated Name&quot;
+}
+</code></pre>
+<h3 id="post-usersdefault-household">POST /users/default-household</h3><p>Request body:</p>
+<pre><code class="language-json">{
+  &quot;householdId&quot;: &quot;4d4f2a4f-688d-4c8b-9981-80eeaf6673d1&quot;
+}
+</code></pre>
+<p>Notes:</p>
+<ul>
+<li>householdId is optional only when the user belongs to exactly one household.</li>
 </ul>
+<h2 id="households">Households</h2><h3 id="post-households">POST /households</h3><p>Request body:</p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;My Home&quot;
+}
+</code></pre>
+<h3 id="get-households">GET /households</h3><p>No request body.</p>
+<h3 id="get-householdsid">GET /households/:id</h3><p>Path params:</p>
+<ul>
+<li>id: household id</li>
+</ul>
+<h3 id="delete-householdsid">DELETE /households/:id</h3><p>Path params:</p>
+<ul>
+<li>id: household id</li>
+</ul>
+<h3 id="post-householdshouseholdidset-default">POST /households/:householdId/set-default</h3><p>Path params:</p>
+<ul>
+<li>householdId: household id in URL</li>
+</ul>
+<p>Request body:</p>
+<pre><code class="language-json">{
+  &quot;householdId&quot;: &quot;4d4f2a4f-688d-4c8b-9981-80eeaf6673d1&quot;
+}
+</code></pre>
+<h3 id="post-householdshouseholdidinvite">POST /households/:householdId/invite</h3><p>Direct membership invitation flow.</p>
+<p>Path params:</p>
+<ul>
+<li>householdId: household id</li>
+</ul>
+<p>Request body:</p>
+<pre><code class="language-json">{
+  &quot;email&quot;: &quot;member@example.com&quot;,
+  &quot;role&quot;: &quot;MEMBER&quot;
+}
+</code></pre>
+<h3 id="post-householdidinvite">POST /household/:id/invite</h3><p>Token invitation flow.</p>
+<p>Path params:</p>
+<ul>
+<li>id: household id</li>
+</ul>
+<p>Request body:</p>
 <pre><code class="language-json">{
   &quot;email&quot;: &quot;person@example.com&quot;
 }
 </code></pre>
 <p>Behavior:</p>
 <ul>
-<li>Validates requester is household member</li>
-<li>Generates secure token with <code>crypto.randomBytes(32).toString(&quot;hex&quot;)</code></li>
-<li>Stores invitation in DB with expiry date</li>
+<li>validates requester is a household member</li>
+<li>generates secure token with crypto.randomBytes(32).toString(&quot;hex&quot;)</li>
+<li>persists Invitation with expiresAt set to 7 days from creation</li>
 </ul>
-<h3 id="validate-invitation">Validate Invitation</h3><ul>
-<li><code>GET /invite/:token</code></li>
-</ul>
-<p>Validation:</p>
+<h3 id="delete-householdshouseholdidmembersuserid">DELETE /households/:householdId/members/:userId</h3><p>Path params:</p>
 <ul>
-<li>Invitation exists</li>
-<li>Invitation is not used</li>
-<li>Invitation is not expired</li>
+<li>householdId: household id</li>
+<li>userId: user id to remove</li>
 </ul>
-<h2 id="rooms">Rooms</h2><ul>
-<li><code>POST /rooms</code></li>
-<li><code>GET /rooms/household/:householdId</code></li>
-<li><code>GET /rooms/:id</code></li>
-<li><code>PUT /rooms/:id</code></li>
-<li><code>DELETE /rooms/:id</code></li>
-<li><code>POST /households/:householdId/rooms/bulk</code></li>
+<h3 id="post-householdshouseholdidrooms">POST /households/:householdId/rooms</h3><p>Path params:</p>
+<ul>
+<li>householdId: household id</li>
 </ul>
-<h2 id="chores">Chores</h2><ul>
-<li><code>GET /chores</code></li>
-<li><code>GET /chores/:id</code></li>
-<li><code>POST /chores</code></li>
-<li><code>PUT /chores/:id</code></li>
-<li><code>DELETE /chores/:id</code></li>
+<p>Request body:</p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;Kitchen&quot;,
+  &quot;roomTypeId&quot;: &quot;ckzroomtype123&quot;
+}
+</code></pre>
+<p>Notes:</p>
+<ul>
+<li>name can be omitted when roomTypeId is provided; controller auto-generates name.</li>
 </ul>
-<h2 id="cleaning-events">Cleaning Events</h2><ul>
-<li><code>GET /cleaning-events</code></li>
-<li><code>POST /cleaning-events</code></li>
-<li><code>PATCH /cleaning-events/:id</code></li>
+<h3 id="post-householdshouseholdidroomsbulk">POST /households/:householdId/rooms/bulk</h3><p>Path params:</p>
+<ul>
+<li>householdId: household id</li>
+</ul>
+<p>Request body:</p>
+<pre><code class="language-json">{
+  &quot;rooms&quot;: [
+    { &quot;name&quot;: &quot;Bedroom 1&quot;, &quot;roomTypeId&quot;: &quot;ckzroomtype1&quot; },
+    { &quot;roomTypeId&quot;: &quot;ckzroomtype2&quot; },
+    { &quot;name&quot;: &quot;Living Room&quot; }
+  ]
+}
+</code></pre>
+<h2 id="invite-validation-public">Invite Validation (Public)</h2><h3 id="get-invitetoken">GET /invite/:token</h3><p>Path params:</p>
+<ul>
+<li>token: invitation token</li>
+</ul>
+<p>Validation rules:</p>
+<ul>
+<li>invitation exists</li>
+<li>invitation is not used</li>
+<li>invitation is not expired</li>
+</ul>
+<h2 id="rooms">Rooms</h2><h3 id="get-roomstypes">GET /rooms/types</h3><p>No request body.</p>
+<h3 id="post-rooms">POST /rooms</h3><p>Request body:</p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;Kitchen&quot;,
+  &quot;householdId&quot;: &quot;4d4f2a4f-688d-4c8b-9981-80eeaf6673d1&quot;
+}
+</code></pre>
+<h3 id="get-roomshouseholdhouseholdid">GET /rooms/household/:householdId</h3><p>Path params:</p>
+<ul>
+<li>householdId: household id</li>
+</ul>
+<h3 id="get-roomsid">GET /rooms/:id</h3><p>Path params:</p>
+<ul>
+<li>id: room id</li>
+</ul>
+<h3 id="put-roomsid">PUT /rooms/:id</h3><p>Path params:</p>
+<ul>
+<li>id: room id</li>
+</ul>
+<p>Request body:</p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;Updated Room Name&quot;
+}
+</code></pre>
+<h3 id="delete-roomsid">DELETE /rooms/:id</h3><p>Path params:</p>
+<ul>
+<li>id: room id</li>
+</ul>
+<h2 id="chores">Chores</h2><h3 id="get-chores">GET /chores</h3><p>No request body.</p>
+<h3 id="get-choresid">GET /chores/:id</h3><p>Path params:</p>
+<ul>
+<li>id: chore id</li>
+</ul>
+<h3 id="post-chores">POST /chores</h3><p>Request body:</p>
+<pre><code class="language-json">{
+  &quot;title&quot;: &quot;Vacuum Living Room&quot;,
+  &quot;description&quot;: &quot;Deep clean including corners&quot;,
+  &quot;roomId&quot;: &quot;d8bb14f6-7c75-47de-bba3-c336561d8351&quot;,
+  &quot;points&quot;: 10
+}
+</code></pre>
+<p>Validation highlights:</p>
+<ul>
+<li>title is required</li>
+<li>roomId must be UUID when provided</li>
+<li>points must be an integer from 1 to 100 when provided</li>
+</ul>
+<h3 id="put-choresid">PUT /chores/:id</h3><p>Path params:</p>
+<ul>
+<li>id: chore id</li>
+</ul>
+<p>Request body:</p>
+<pre><code class="language-json">{
+  &quot;title&quot;: &quot;Vacuum + Mop Living Room&quot;,
+  &quot;description&quot;: &quot;Include under the couch&quot;,
+  &quot;points&quot;: 15
+}
+</code></pre>
+<h3 id="delete-choresid">DELETE /chores/:id</h3><p>Path params:</p>
+<ul>
+<li>id: chore id</li>
+</ul>
+<h2 id="cleaning-events">Cleaning Events</h2><h3 id="get-cleaning-events">GET /cleaning-events</h3><p>No request body.</p>
+<h3 id="post-cleaning-events">POST /cleaning-events</h3><p>Request body:</p>
+<pre><code class="language-json">{
+  &quot;householdId&quot;: &quot;4d4f2a4f-688d-4c8b-9981-80eeaf6673d1&quot;,
+  &quot;name&quot;: &quot;Saturday Reset&quot;,
+  &quot;eventDate&quot;: &quot;2026-04-12T10:00:00.000Z&quot;,
+  &quot;notificationDate&quot;: &quot;2026-04-11T18:00:00.000Z&quot;,
+  &quot;distributionMode&quot;: &quot;balanced&quot;,
+  &quot;recurrenceRule&quot;: &quot;weekly&quot;,
+  &quot;notifyParticipants&quot;: true,
+  &quot;status&quot;: &quot;scheduled&quot;,
+  &quot;participantIds&quot;: [
+    &quot;fbe6f787-85af-4f29-8f5a-29967f5ee17f&quot;
+  ],
+  &quot;roomIds&quot;: [
+    &quot;51ce50fa-85fd-443f-b9b3-47c349ac2e0a&quot;
+  ]
+}
+</code></pre>
+<p>Validation highlights:</p>
+<ul>
+<li>participantIds must contain at least one UUID</li>
+<li>roomIds must contain at least one UUID</li>
+<li>notificationDate must be before or equal to eventDate</li>
+</ul>
+<h3 id="patch-cleaning-eventsid">PATCH /cleaning-events/:id</h3><p>Path params:</p>
+<ul>
+<li>id: cleaning event id</li>
+</ul>
+<p>Request body example:</p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;Sunday Deep Clean&quot;,
+  &quot;eventDate&quot;: &quot;2026-04-13T10:00:00.000Z&quot;,
+  &quot;notificationDate&quot;: &quot;2026-04-12T18:00:00.000Z&quot;,
+  &quot;distributionMode&quot;: &quot;random&quot;,
+  &quot;recurrenceRule&quot;: &quot;none&quot;,
+  &quot;notifyParticipants&quot;: false,
+  &quot;status&quot;: &quot;in_progress&quot;
+}
+</code></pre>
+<h3 id="delete-cleaning-eventsid">DELETE /cleaning-events/:id</h3><p>Path params:</p>
+<ul>
+<li>id: cleaning event id</li>
 </ul>
 
           <p class="footer">Source: docs/API_REFERENCE.md</p>

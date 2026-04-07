@@ -86,6 +86,29 @@ const buildHtml = ({ title, heroText, sourceLabel, content, toc }) => `<!doctype
         opacity: 0.95;
       }
 
+      .hero-controls {
+        margin-top: 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.14);
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 0.92rem;
+      }
+
+      .toggle input {
+        accent-color: #84cc16;
+      }
+
       .layout {
         display: grid;
         grid-template-columns: 280px 1fr;
@@ -196,6 +219,10 @@ const buildHtml = ({ title, heroText, sourceLabel, content, toc }) => `<!doctype
         font-size: 0.9rem;
       }
 
+      body.request-body-hidden .request-body-block {
+        display: none;
+      }
+
       @media (max-width: 900px) {
         .layout { grid-template-columns: 1fr; }
         .toc {
@@ -210,6 +237,12 @@ const buildHtml = ({ title, heroText, sourceLabel, content, toc }) => `<!doctype
       <header class="hero">
         <h1>${title}</h1>
         <p>${heroText}</p>
+        <div class="hero-controls" id="hero-controls">
+          <label class="toggle" id="request-body-toggle-wrapper">
+            <input type="checkbox" id="request-body-toggle" checked />
+            <span>Show Request Bodies</span>
+          </label>
+        </div>
       </header>
 
       <main class="layout">
@@ -224,6 +257,39 @@ const buildHtml = ({ title, heroText, sourceLabel, content, toc }) => `<!doctype
         </article>
       </main>
     </div>
+    <script>
+      (function () {
+        const markerTexts = ["request body:", "request body example:"];
+        const article = document.querySelector("article.doc");
+        const toggle = document.getElementById("request-body-toggle");
+        const toggleWrapper = document.getElementById("request-body-toggle-wrapper");
+
+        if (!article || !toggle || !toggleWrapper) return;
+
+        const paragraphs = Array.from(article.querySelectorAll("p"));
+        let markedCount = 0;
+
+        paragraphs.forEach((paragraph) => {
+          const text = paragraph.textContent.trim().toLowerCase();
+          if (!markerTexts.includes(text)) return;
+
+          const next = paragraph.nextElementSibling;
+          if (next && next.tagName === "PRE") {
+            next.classList.add("request-body-block");
+            markedCount += 1;
+          }
+        });
+
+        if (markedCount === 0) {
+          toggleWrapper.style.display = "none";
+          return;
+        }
+
+        toggle.addEventListener("change", () => {
+          document.body.classList.toggle("request-body-hidden", !toggle.checked);
+        });
+      })();
+    </script>
   </body>
 </html>`;
 
