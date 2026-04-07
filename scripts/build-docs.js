@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 
-const tutorialPath = path.join(rootDir, "API_TUTORIAL.md");
+const configPath = path.join(rootDir, ".github", "docs-site.config.json");
 const outputDir = path.join(rootDir, "docs");
 const outputPath = path.join(outputDir, "index.html");
 
@@ -30,12 +30,12 @@ const extractHeadings = (markdown) => {
     }));
 };
 
-const buildHtml = ({ content, toc }) => `<!doctype html>
+const buildHtml = ({ title, heroText, sourceLabel, content, toc }) => `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Home Chore Scheduler API</title>
+    <title>${title}</title>
     <style>
       :root {
         --bg-1: #f7f3ea;
@@ -208,8 +208,8 @@ const buildHtml = ({ content, toc }) => `<!doctype html>
   <body>
     <div class="wrap">
       <header class="hero">
-        <h1>Home Chore Scheduler API</h1>
-        <p>This page is automatically generated from API_TUTORIAL.md on each deployment.</p>
+        <h1>${title}</h1>
+        <p>${heroText}</p>
       </header>
 
       <main class="layout">
@@ -220,7 +220,7 @@ const buildHtml = ({ content, toc }) => `<!doctype html>
 
         <article class="card doc">
           ${content}
-          <p class="footer">Source: API_TUTORIAL.md</p>
+          <p class="footer">Source: ${sourceLabel}</p>
         </article>
       </main>
     </div>
@@ -228,7 +228,29 @@ const buildHtml = ({ content, toc }) => `<!doctype html>
 </html>`;
 
 const run = async () => {
-  const markdown = await fs.readFile(tutorialPath, "utf8");
+  let config;
+  try {
+    const rawConfig = await fs.readFile(configPath, "utf8");
+    config = JSON.parse(rawConfig);
+  } catch (error) {
+    if (error && error.code === "ENOENT") {
+      throw new Error(
+        `Missing docs config: ${configPath}.`
+      );
+    }
+    throw error;
+  }
+
+  const markdownPath = path.join(rootDir, config.sourceMarkdown || "docs/API_REFERENCE.md");
+  let markdown;
+  try {
+    markdown = await fs.readFile(markdownPath, "utf8");
+  } catch (error) {
+    if (error && error.code === "ENOENT") {
+      throw new Error(`Missing markdown source for docs site: ${markdownPath}.`);
+    }
+    throw error;
+  }
 
   const renderer = new marked.Renderer();
   renderer.heading = (token) => {
@@ -252,11 +274,21 @@ const run = async () => {
     .join("\n");
 
   const content = marked.parse(markdown);
-  const html = buildHtml({ content, toc: tocItems });
+  const html = buildHtml({
+    title: config.title || "Project Documentation",
+    heroText:
+      config.heroText ||
+      "This page is automatically generated from a predefined markdown source.",
+    sourceLabel: config.sourceMarkdown || "docs/API_REFERENCE.md",
+    content,
+    toc: tocItems,
+  });
 
   await fs.mkdir(outputDir, { recursive: true });
   await fs.writeFile(outputPath, html, "utf8");
-  console.log(`Generated ${path.relative(rootDir, outputPath)} from API_TUTORIAL.md`);
+  console.log(
+    `Generated ${path.relative(rootDir, outputPath)} from ${path.relative(rootDir, markdownPath)}`
+  );
 };
 
 run().catch((error) => {

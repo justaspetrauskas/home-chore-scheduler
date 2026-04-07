@@ -1,75 +1,84 @@
-# Copilot Instructions - Prisma PG Course
+# Copilot Instructions - Home Chore Scheduler API
 
-## Project Overview
-This is a Node.js Express backend application for a chore management system. The project integrates **Prisma ORM** with **PostgreSQL** for database operations. Currently in early development with route scaffolding in progress.
+## Source of Truth
+Use API_TUTORIAL.md as the behavioral contract for controllers, middleware, and routes.
 
-## Technology Stack
-- **Framework**: Express.js (v5.2.1) - ESM modules
-- **Database**: PostgreSQL with Prisma ORM
-- **Dev Tools**: Nodemon for hot-reload development
-- **Runtime**: Node.js with ES modules (`"type": "module"` in package.json)
+## Tech and Runtime
+- Node.js with ESM modules only.
+- Express 5 for HTTP routing.
+- Prisma ORM with PostgreSQL.
+- Socket.IO for realtime events.
 
-## Project Structure
+## Current API Surface
 
-```
-src/
-├── server.js          # Main Express app entry point, route mounting
-├── routes/
-│   └── choreRoutes.js # Chore resource endpoints (scaffold)
-├── models/           # [Expected] Prisma schema definitions
-├── controllers/      # [Expected] Business logic for routes
-└── middleware/       # [Expected] Auth, validation, error handling
-```
+### Auth
+- POST /auth/register
+- POST /auth/login
+- POST /auth/logout
 
-## Key Architectural Patterns
+### Users
+- GET /users
+- GET /users/me
+- PUT /users/:id
+- DELETE /users/:id
+- POST /users/set-default-household
 
-### Module System
-- **Use ES6 imports/exports** exclusively (`import`/`export`)
-- Do NOT use CommonJS (`require`/`module.exports`)
+### Households
+- POST /households
+- GET /households
+- GET /households/:id
+- DELETE /households/:id
+- DELETE /households/:householdId/members/:userId
+- POST /households/:householdId/set-default
+- POST /households/:householdId/invite (direct membership flow)
+- POST /household/:id/invite (token invitation flow)
 
-### Planned Resources
-The following commented resources in [src/server.js](src/server.js#L16-L20) indicate the domain model:
-- **AUTH** - Authentication/Authorization
-- **CHORE** - Chore management (primary resource)
-- **AREA** - Location/area categories
-- **USER** - User profiles
-- **ASSIGNMENT** - Chore-to-user assignments
+### Invite Validation (Public)
+- GET /invite/:token
+- Must validate invitation exists, not used, and not expired.
 
-### Route Organization
-- Create dedicated router modules in `src/routes/` for each resource
-- Mount routers in [server.js](src/server.js) using `app.use()`
-- Example: `app.use('/api/chores', choreRouter)`
+### Rooms
+- POST /rooms
+- GET /rooms/household/:householdId
+- GET /rooms/:id
+- PUT /rooms/:id
+- DELETE /rooms/:id
+- POST /households/:householdId/rooms/bulk
 
-## Development Workflow
+### Chores
+- GET /chores
+- GET /chores/:id
+- POST /chores
+- PUT /chores/:id
+- DELETE /chores/:id
 
-**Start dev server with hot-reload:**
-```bash
-npm run dev
-```
+### Cleaning Events
+- GET /cleaning-events
+- POST /cleaning-events
+- PATCH /cleaning-events/:id
 
-This runs Nodemon which watches `src/server.js` for changes.
+## Controller Rules
+- Keep business logic in controllers and routing in route modules.
+- Return JSON responses with explicit status codes.
+- Use generic authentication error messages.
+- Enforce membership/ownership checks for household-scoped mutations.
+- Keep invitation token generation cryptographically secure.
 
-## Code Style & Conventions
+## Invitation Contract
+- createInvitation endpoint must generate token with crypto.randomBytes(32).toString("hex").
+- Invitation persistence requires email, token, householdId, and expiresAt.
+- getInvitationByToken must reject used or expired invitations.
 
-1. **Port Configuration**: Use constants (currently `PORT = 5050` in server.js)
-2. **Response Format**: Use `.json()` for API responses
-3. **Router Handlers**: Handlers receive `(req, res)` parameters
+## Realtime Pattern
+- Access Socket.IO via req.app.get("io") inside controllers.
+- Emit domain events on create/update operations where useful.
 
-## Integration Points
+## Coding Constraints
+- Use import/export only, never require/module.exports.
+- Preserve existing route naming and response envelope style in each module.
+- Prefer small, targeted changes and avoid unrelated refactors.
 
-- **Prisma Client**: Will be imported in controllers/models for database queries
-- **Middleware Chain**: Add express middleware (body parser, auth) to `server.js` before route mounting
-- **Error Handling**: Implement global error handler after route definitions
-
-## When Adding Features
-1. Create resource routes in `src/routes/{resource}Routes.js` as Express Router
-2. Implement controller logic for business logic separation
-3. Define Prisma schema for new database entities
-4. Mount routes in `server.js` with appropriate API path prefix
-
-## Known Gaps (Not Yet Implemented)
-- Prisma schema and client setup
-- Database models for CHORE, USER, AREA, ASSIGNMENT
-- Authentication/authorization middleware
-- Input validation
-- Error handling middleware
+## Docs and Pages
+- docs/index.html is generated by scripts/build-docs.js.
+- The docs build is configured by .github/docs-site.config.json.
+- Keep GitHub Pages artifacts under docs/.
