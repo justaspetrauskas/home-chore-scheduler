@@ -4,6 +4,7 @@ import {
   createHousehold,
   getUserHouseholds,
   getHouseholdById,
+  createInvitation,
   inviteMember,
   removeMember,
   deleteHousehold,
@@ -18,6 +19,7 @@ router.use(authMiddleware)
 router.post('/', createHousehold)
 router.get('/', getUserHouseholds)
 router.get('/:id', getHouseholdById)
+router.post('/:id/invite', createInvitation)
 router.post('/:householdId/invite', inviteMember)
 router.delete('/:householdId/members/:userId', removeMember)
 router.delete('/:id', deleteHousehold)

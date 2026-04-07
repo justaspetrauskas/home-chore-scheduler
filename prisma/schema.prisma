@@ -73,6 +73,7 @@ model Household {
   members HouseholdMember[]
   rooms   Room[]
   events  CleaningEvent[]
+  invitations Invitation[]
 }
 
 model HouseholdMember {
@@ -180,4 +181,16 @@ model TaskAssignment {
   room         Room                 @relation(fields: [roomId], references: [id])
   chore        Chore?               @relation(fields: [choreId], references: [id])
   assignedTo   User?                @relation(fields: [assignedToId], references: [id])
+}
+
+model Invitation {
+  id          String   @id @default(uuid())
+  householdId String
+  email       String
+  token       String   @unique
+  used        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+
+  household Household @relation(fields: [householdId], references: [id])
 }

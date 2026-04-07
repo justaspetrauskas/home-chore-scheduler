@@ -6,6 +6,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/server.js",
+    "docs:build": "node scripts/build-docs.js",
     "cron": "node src/cronTest.js",
     "worker": "node src/worker.js",
     "worker:setup": "npx graphile-worker --schema-only",
@@ -31,6 +32,7 @@
     "express": "^5.2.1",
     "graphile-worker": "^0.16.6",
     "jsonwebtoken": "^9.0.3",
+    "marked": "^18.0.0",
     "node-cron": "^4.2.1",
     "pg": "^8.18.0",
     "socket.io": "^4.8.3",

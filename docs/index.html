@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home Chore Scheduler API</title>
+    <style>
+      :root {
+        --bg-1: #f7f3ea;
+        --bg-2: #dfe8f6;
+        --card: #ffffffcc;
+        --text: #17202a;
+        --muted: #4f5f6f;
+        --accent: #0f766e;
+        --line: #d6dee6;
+        --shadow: 0 12px 30px rgba(16, 24, 40, 0.12);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        color: var(--text);
+        background:
+          radial-gradient(circle at 20% 10%, #fff6d9 0, transparent 40%),
+          radial-gradient(circle at 80% 20%, #d9efff 0, transparent 30%),
+          linear-gradient(170deg, var(--bg-1), var(--bg-2));
+        font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+        line-height: 1.7;
+      }
+
+      .wrap {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 24px 16px 56px;
+      }
+
+      .hero {
+        background: linear-gradient(120deg, #0f766e, #0f4c81 70%, #0b7285);
+        color: #f5fbff;
+        border-radius: 18px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+        margin-bottom: 16px;
+      }
+
+      .hero h1 {
+        margin: 0 0 6px;
+        font-size: clamp(1.4rem, 3vw, 2.3rem);
+      }
+
+      .hero p {
+        margin: 0;
+        opacity: 0.95;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 16px;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(6px);
+      }
+
+      .toc {
+        position: sticky;
+        top: 14px;
+        align-self: start;
+        padding: 14px;
+        max-height: calc(100vh - 28px);
+        overflow: auto;
+      }
+
+      .toc h2 {
+        margin: 0 0 10px;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+
+      .toc a {
+        display: block;
+        text-decoration: none;
+        color: var(--text);
+        border-radius: 8px;
+        padding: 6px 8px;
+        margin-bottom: 4px;
+      }
+
+      .toc a[data-depth="2"] { margin-left: 10px; }
+      .toc a[data-depth="3"] { margin-left: 20px; }
+
+      .toc a:hover {
+        background: #edf5ff;
+      }
+
+      .doc {
+        padding: 18px;
+        background: #fff;
+      }
+
+      .doc h1, .doc h2, .doc h3 {
+        scroll-margin-top: 16px;
+      }
+
+      .doc h1 { font-size: 1.8rem; }
+      .doc h2 {
+        margin-top: 2rem;
+        border-bottom: 1px solid #e7edf4;
+        padding-bottom: 0.35rem;
+      }
+
+      .doc code {
+        background: #f3f6fb;
+        border: 1px solid #e0e8f1;
+        border-radius: 6px;
+        padding: 2px 6px;
+      }
+
+      .doc pre {
+        margin: 10px 0;
+        background: #0f172a;
+        color: #e2e8f0;
+        border-radius: 10px;
+        padding: 12px;
+        overflow-x: auto;
+      }
+
+      .doc pre code {
+        background: transparent;
+        border: 0;
+        padding: 0;
+      }
+
+      .doc blockquote {
+        border-left: 4px solid #8fb3cf;
+        margin: 1rem 0;
+        padding: 0.1rem 0.9rem;
+        background: #f7fbff;
+      }
+
+      .doc table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .doc th,
+      .doc td {
+        border: 1px solid #d8e2ec;
+        padding: 8px;
+        text-align: left;
+      }
+
+      .footer {
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 900px) {
+        .layout { grid-template-columns: 1fr; }
+        .toc {
+          position: static;
+          max-height: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="hero">
+        <h1>Home Chore Scheduler API</h1>
+        <p>This page is automatically generated from API_TUTORIAL.md on each deployment.</p>
+      </header>
+
+      <main class="layout">
+        <aside class="card toc">
+          <h2>Contents</h2>
+          <a href="#bulk-room-assignment" data-depth="3">Bulk Room Assignment</a>
+<a href="#home-chore-scheduler-api-controllers-middleware-and-routes-explained" data-depth="1">Home Chore Scheduler API: Controllers, Middleware, and Routes Explained</a>
+<a href="#realtime-layer-socketio" data-depth="2">Realtime Layer (Socket.IO)</a>
+<a href="#controllers" data-depth="2">Controllers</a>
+<a href="#authcontrollerjs" data-depth="3">authController.js</a>
+<a href="#usercontrollerjs" data-depth="3">userController.js</a>
+<a href="#householdcontrollerjs" data-depth="3">householdController.js</a>
+<a href="#invitationcontrollerjs" data-depth="3">invitationController.js</a>
+<a href="#roomcontrollerjs" data-depth="3">roomController.js</a>
+<a href="#chorescontrollerjs" data-depth="3">choresController.js</a>
+<a href="#cleaningeventcontrollerjs" data-depth="3">cleaningEventController.js</a>
+<a href="#middleware" data-depth="2">Middleware</a>
+<a href="#authmiddlewarejs" data-depth="3">authMiddleware.js</a>
+<a href="#corsmiddlewarejs" data-depth="3">corsMiddleware.js</a>
+<a href="#validaterequestmiddlewarejs" data-depth="3">validateRequestMiddleware.js</a>
+<a href="#api-routes" data-depth="2">API Routes</a>
+<a href="#auth" data-depth="3">/auth</a>
+<a href="#users" data-depth="3">/users</a>
+<a href="#households" data-depth="3">/households</a>
+<a href="#invite" data-depth="3">/invite</a>
+<a href="#invitation-endpoints-details" data-depth="3">Invitation Endpoints Details</a>
+<a href="#rooms" data-depth="3">/rooms</a>
+<a href="#chores" data-depth="3">/chores</a>
+<a href="#cleaning-events" data-depth="3">/cleaning-events</a>
+<a href="#interview-ready-summary" data-depth="2">Interview-Ready Summary</a>
+        </aside>
+
+        <article class="card doc">
+          <h3 id="bulk-room-assignment">Bulk Room Assignment</h3><p><strong>Endpoint:</strong> <code>POST /api/households/{householdId}/rooms/bulk</code></p>
+<p><strong>Description:</strong>
+Create multiple rooms for a household in a single request. If a room name is not provided but a <code>roomTypeId</code> is, the name will be auto-generated (e.g., &quot;Bedroom 1&quot;). Only household members can use this endpoint.</p>
+<p><strong>Request Body:</strong></p>
+<pre><code class="language-json">{
+	&quot;rooms&quot;: [
+		{ &quot;name&quot;: &quot;Bedroom 1&quot;, &quot;roomTypeId&quot;: &quot;abc123&quot; },
+		{ &quot;roomTypeId&quot;: &quot;def456&quot; },
+		{ &quot;name&quot;: &quot;Living Room&quot; }
+	]
+}
+</code></pre>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+	&quot;status&quot;: &quot;success&quot;,
+	&quot;data&quot;: {
+		&quot;rooms&quot;: [
+			{
+				&quot;id&quot;: &quot;...&quot;,
+				&quot;name&quot;: &quot;Bedroom 1&quot;,
+				&quot;householdId&quot;: &quot;...&quot;,
+				&quot;roomTypeId&quot;: &quot;abc123&quot;,
+				&quot;createdById&quot;: &quot;...&quot;,
+				&quot;createdAt&quot;: &quot;...&quot;,
+				&quot;roomType&quot;: { &quot;id&quot;: &quot;abc123&quot;, &quot;label&quot;: &quot;Bedroom&quot;, ... }
+			},
+			// ...more rooms
+		]
+	}
+}
+</code></pre>
+<p><strong>Errors:</strong></p>
+<ul>
+<li>403: Not a member of this household</li>
+</ul>
+<p><strong>Controller:</strong> <code>createRoomsBulk</code> in <code>householdController.js</code></p>
+<h1 id="home-chore-scheduler-api-controllers-middleware-and-routes-explained">Home Chore Scheduler API: Controllers, Middleware, and Routes Explained</h1><h2 id="realtime-layer-socketio">Realtime Layer (Socket.IO)</h2><p>The API now includes a Socket.IO server for realtime updates.</p>
+<ul>
+<li>Socket.IO is initialized in <code>src/server.js</code>.</li>
+<li>The Express app is wrapped with <code>createServer(app)</code>.</li>
+<li>A Socket.IO server instance is created with shared CORS config.</li>
+<li>The instance is attached to Express with <code>app.set(&quot;io&quot;, io)</code>.</li>
+<li>Request handlers can access it using <code>req.app.get(&quot;io&quot;)</code>.</li>
+</ul>
+<p>Example usage inside a controller:</p>
+<pre><code class="language-js">const io = req.app.get(&quot;io&quot;);
+io.emit(&quot;cleaning-event:created&quot;, { eventId: event.id });
+</code></pre>
+<p>Use broadcast events for global updates, then move to rooms (for example by household) when you need more targeted realtime delivery.</p>
+<p>Client quick start:</p>
+<pre><code class="language-bash">npm install socket.io-client
+</code></pre>
+<pre><code class="language-js">import { io } from &quot;socket.io-client&quot;;
+
+const socket = io(&quot;http://localhost:5050&quot;, {
+	withCredentials: true,
+});
+
+socket.on(&quot;connect&quot;, () =&gt; {
+	console.log(&quot;connected&quot;, socket.id);
+});
+
+socket.on(&quot;cleaning-event:created&quot;, (payload) =&gt; {
+	console.log(&quot;new event&quot;, payload);
+});
+</code></pre>
+<h2 id="controllers">Controllers</h2><h3 id="authcontrollerjs">authController.js</h3><p>Handles user authentication:</p>
+<ul>
+<li><strong>register</strong>: Registers a new user, hashes password, checks for duplicate emails.</li>
+<li><strong>login</strong>: Authenticates user, verifies password, issues JWT token.</li>
+<li><strong>logout</strong>: Ends user session (token removal/invalid).</li>
+<li><strong>Security</strong>: Uses generic error messages, never exposes sensitive info.</li>
+</ul>
+<h3 id="usercontrollerjs">userController.js</h3><p>Manages user profile and settings:</p>
+<ul>
+<li><strong>getMe</strong>: Returns authenticated user&#39;s profile, memberships (with household names), and cleaning events for their default household. If no default, uses the newest household.</li>
+<li><strong>setDefaultHousehold</strong>: Allows user to set their default household.</li>
+<li><strong>CRUD</strong>: Update/delete user (self only), strict access control.</li>
+<li><strong>Cleans</strong>: Removes sensitive fields from responses.</li>
+</ul>
+<h3 id="householdcontrollerjs">householdController.js</h3><p>Manages household lifecycle:</p>
+<ul>
+<li><strong>createHousehold</strong>: Creates a household, sets creator as ADMIN.</li>
+<li><strong>getUserHouseholds</strong>: Lists all households for user, including members, rooms, and events.</li>
+<li><strong>getHouseholdById</strong>: Gets a household by ID, with members, rooms, and events.</li>
+<li><strong>createInvitation</strong>: Creates an email invitation for a household member using a secure random token (<code>crypto.randomBytes(32).toString(&quot;hex&quot;)</code>) and stores it in the <code>Invitation</code> table.</li>
+<li><strong>inviteMember</strong>: Adds a user to a household.</li>
+<li><strong>removeMember</strong>: Removes a user from a household.</li>
+<li><strong>deleteHousehold</strong>: Only owner can delete; deletes memberships first to avoid FK errors.</li>
+<li><strong>setDefaultHouseholdForUser</strong>: Lets user set a household as their default.</li>
+</ul>
+<h3 id="invitationcontrollerjs">invitationController.js</h3><p>Handles invitation token validation:</p>
+<ul>
+<li><strong>getInvitationByToken</strong>: Looks up invitation by token and validates all required conditions: invitation exists, is not used, and has not expired.</li>
+</ul>
+<h3 id="roomcontrollerjs">roomController.js</h3><p>Manages rooms within households:</p>
+<ul>
+<li><strong>CRUD</strong>: Create, read, update, delete rooms.</li>
+<li><strong>Access</strong>: Only household members can manage rooms.</li>
+<li><strong>List</strong>: List rooms by household.</li>
+</ul>
+<h3 id="chorescontrollerjs">choresController.js</h3><p>Manages chores:</p>
+<ul>
+<li><strong>CRUD</strong>: Create, update, delete, list, get by ID.</li>
+<li><strong>Validation</strong>: Uses Zod schemas for input validation.</li>
+<li><strong>Permissions</strong>: Only creator or admin can modify/delete.</li>
+</ul>
+<h3 id="cleaningeventcontrollerjs">cleaningEventController.js</h3><p>Manages cleaning events:</p>
+<ul>
+<li><strong>createCleaningEvent</strong>: Creates an event with <code>householdId</code>, <code>name</code>, <code>eventDate</code>, <code>notificationDate</code>, <code>distributionMode</code>, <code>recurrenceRule</code>, <code>notifyParticipants</code>, and <code>status</code>.</li>
+<li><strong>getCleaningEvents</strong>: Lists events for households where the user is a member.</li>
+<li><strong>updateCleaningEvent</strong>: Partially updates event fields (<code>name</code>, dates, distribution, recurrence, notification flag, status) for authorized household members.</li>
+</ul>
+<hr>
+<h2 id="middleware">Middleware</h2><h3 id="authmiddlewarejs">authMiddleware.js</h3><ul>
+<li>Verifies JWT tokens from headers/cookies.</li>
+<li>Attaches authenticated user to request.</li>
+<li>Blocks access if authentication fails.</li>
+</ul>
+<h3 id="corsmiddlewarejs">corsMiddleware.js</h3><ul>
+<li>(If used) Configures CORS for cross-origin requests.</li>
+</ul>
+<h3 id="validaterequestmiddlewarejs">validateRequestMiddleware.js</h3><ul>
+<li>Validates request bodies using Zod schemas.</li>
+<li>Returns 400 errors for invalid input.</li>
+</ul>
+<hr>
+<h2 id="api-routes">API Routes</h2><h3 id="auth">/auth</h3><ul>
+<li><code>POST /register</code> — Register a new user.</li>
+<li><code>POST /login</code> — Authenticate and receive a JWT.</li>
+<li><code>POST /logout</code> — End session.</li>
+</ul>
+<h3 id="users">/users</h3><ul>
+<li><code>GET /users</code> — List all users (auth required).</li>
+<li><code>GET /users/me</code> — Get current user profile, memberships, and cleaning events.</li>
+<li><code>PUT /users/:id</code> — Update user (self only).</li>
+<li><code>DELETE /users/:id</code> — Delete user (self only).</li>
+<li><code>POST /users/set-default-household</code> — Set default household.</li>
+</ul>
+<h3 id="households">/households</h3><ul>
+<li><code>POST /households</code> — Create a new household.</li>
+<li><code>GET /households</code> — List user’s households (with rooms/events).</li>
+<li><code>GET /households/:id</code> — Get household details (with rooms/events).</li>
+<li><code>POST /household/:id/invite</code> — Create invitation token for an email and store it in DB.</li>
+<li><code>POST /households/:householdId/invite</code> — Invite a user.</li>
+<li><code>DELETE /households/:householdId/members/:userId</code> — Remove a member.</li>
+<li><code>DELETE /households/:id</code> — Delete a household (owner only).</li>
+<li><code>POST /households/:householdId/set-default</code> — Set as user’s default household.</li>
+</ul>
+<h3 id="invite">/invite</h3><ul>
+<li><code>GET /invite/:token</code> — Validate invitation token (exists, not used, not expired).</li>
+</ul>
+<h3 id="invitation-endpoints-details">Invitation Endpoints Details</h3><h4 id="create-invitation">Create invitation</h4><p><strong>Endpoint:</strong> <code>POST /household/:id/invite</code></p>
+<p><strong>Description:</strong>
+Creates a household invitation for the provided email. The requester must be a member of the household. A secure random token is generated and persisted.</p>
+<p><strong>Request Body:</strong></p>
+<pre><code class="language-json">{
+	&quot;email&quot;: &quot;person@example.com&quot;
+}
+</code></pre>
+<p><strong>Success Response (201):</strong></p>
+<pre><code class="language-json">{
+	&quot;id&quot;: &quot;...&quot;,
+	&quot;householdId&quot;: &quot;...&quot;,
+	&quot;email&quot;: &quot;person@example.com&quot;,
+	&quot;token&quot;: &quot;&lt;64-hex-token&gt;&quot;,
+	&quot;used&quot;: false,
+	&quot;createdAt&quot;: &quot;...&quot;,
+	&quot;expiresAt&quot;: &quot;...&quot;
+}
+</code></pre>
+<p><strong>Errors:</strong></p>
+<ul>
+<li>400: Email is required</li>
+<li>403: Not a member of this household</li>
+</ul>
+<h4 id="validate-invitation-token">Validate invitation token</h4><p><strong>Endpoint:</strong> <code>GET /invite/:token</code></p>
+<p><strong>Description:</strong>
+Validates an invitation token by checking that it exists, has not been used, and has not expired.</p>
+<p><strong>Success Response (200):</strong></p>
+<pre><code class="language-json">{
+	&quot;status&quot;: &quot;success&quot;,
+	&quot;data&quot;: {
+		&quot;invitation&quot;: {
+			&quot;id&quot;: &quot;...&quot;,
+			&quot;householdId&quot;: &quot;...&quot;,
+			&quot;email&quot;: &quot;person@example.com&quot;,
+			&quot;token&quot;: &quot;&lt;64-hex-token&gt;&quot;,
+			&quot;used&quot;: false,
+			&quot;createdAt&quot;: &quot;...&quot;,
+			&quot;expiresAt&quot;: &quot;...&quot;,
+			&quot;household&quot;: {
+				&quot;id&quot;: &quot;...&quot;,
+				&quot;name&quot;: &quot;My Home&quot;
+			}
+		}
+	}
+}
+</code></pre>
+<p><strong>Errors:</strong></p>
+<ul>
+<li>404: Invitation not found</li>
+<li>400: Invitation already used</li>
+<li>400: Invitation expired</li>
+</ul>
+<h3 id="rooms">/rooms</h3><ul>
+<li><code>POST /rooms</code> — Create a room.</li>
+<li><code>GET /rooms/household/:householdId</code> — List rooms for a household.</li>
+<li><code>GET /rooms/:id</code> — Get room details.</li>
+<li><code>PUT /rooms/:id</code> — Update a room.</li>
+<li><code>DELETE /rooms/:id</code> — Delete a room.</li>
+</ul>
+<h3 id="chores">/chores</h3><ul>
+<li><code>GET /chores</code> — List chores.</li>
+<li><code>GET /chores/:id</code> — Get chore details.</li>
+<li><code>POST /chores</code> — Create a chore.</li>
+<li><code>PUT /chores/:id</code> — Update a chore.</li>
+<li><code>DELETE /chores/:id</code> — Delete a chore.</li>
+</ul>
+<h3 id="cleaning-events">/cleaning-events</h3><ul>
+<li><code>GET /cleaning-events</code> — List cleaning events for the user.</li>
+<li><code>POST /cleaning-events</code> — Create a new cleaning event.</li>
+<li><code>PATCH /cleaning-events/:id</code> — Update an existing cleaning event.</li>
+</ul>
+<hr>
+<h2 id="interview-ready-summary">Interview-Ready Summary</h2><ul>
+<li>Architecture separates business logic (controllers), validation (middlewares), and routing (routes).</li>
+<li>Security is enforced at middleware and controller level.</li>
+<li>Data returned is always cleaned of sensitive fields.</li>
+<li>Most endpoints are protected by authentication; public invite token validation is exposed at <code>GET /invite/:token</code> by design.</li>
+<li>The API is RESTful, modular, and follows best practices for error handling and data validation.</li>
+</ul>
+
+          <p class="footer">Source: API_TUTORIAL.md</p>
+        </article>
+      </main>
+    </div>
+  </body>
+</html>

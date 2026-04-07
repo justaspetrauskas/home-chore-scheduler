@@ -44,6 +44,7 @@ const setDefaultHouseholdForUser = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+import { randomBytes } from "node:crypto";
 import { prisma } from "../config/db.js";
 
 // Create a new household
@@ -142,6 +143,48 @@ const inviteMember = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 }
+
+// Create invitation token for household onboarding
+const createInvitation = async (req, res) => {
+  try {
+    const { id: householdId } = req.params;
+    const { email } = req.body;
+    const userId = req.user.id;
+
+    if (!email || typeof email !== "string") {
+      return res.status(400).json({ error: "Email is required" });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) {
+      return res.status(400).json({ error: "Email is required" });
+    }
+
+    const membership = await prisma.householdMember.findUnique({
+      where: { userId_householdId: { userId, householdId } },
+    });
+
+    if (!membership) {
+      return res.status(403).json({ error: "Not a member of this household" });
+    }
+
+    const token = randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    const invitation = await prisma.invitation.create({
+      data: {
+        householdId,
+        email: normalizedEmail,
+        token,
+        expiresAt,
+      },
+    });
+
+    res.status(201).json(invitation);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 // Create a room for a household (with optional auto-naming)
 const createRoomForHousehold = async (req, res) => {
@@ -257,6 +300,7 @@ export {
   createHousehold,
   getUserHouseholds,
   getHouseholdById,
+  createInvitation,
   inviteMember,
   removeMember,
   deleteHousehold,

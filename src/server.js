@@ -14,6 +14,8 @@ import householdRoutes from "./routes/householdRoutes.js";
 import roomRoutes from "./routes/roomRoutes.js";
 import taskAssignmentRoutes from "./routes/taskAssignmentRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import webhookRoutes from "./routes/webhookRoutes.js";
+import invitationRoutes from "./routes/invitationRoutes.js";
  
 config();
 connectDB();
@@ -58,10 +60,13 @@ function setupRoutes() {
   app.use("/auth", authRoutes);
   app.use("/chores", choreRoutes);
   app.use("/rooms", roomRoutes);
+  app.use("/household", householdRoutes);
   app.use("/households", householdRoutes);
   app.use("/cleaning-events", cleaningEventRoutes);
   app.use("/task-assignments", taskAssignmentRoutes);
   app.use("/users", userRoutes);
+  app.use("/webhooks", webhookRoutes);
+  app.use("/invite", invitationRoutes);
 
   if (IS_DEVELOPMENT) {
     app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
