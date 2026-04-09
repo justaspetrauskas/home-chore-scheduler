@@ -127,6 +127,7 @@ const getMe = async (req, res) => {
             assignedToUserId: task.assignedToId,
             roomName: task.room?.name || null,
             room: task.room,
+            chore: task.chore,
             date: task.date,
             status: task.status,
             completedAt: task.completedAt,
@@ -168,6 +169,7 @@ const getMe = async (req, res) => {
                 assignedToUserId: task.assignedToId,
                 roomName: task.room?.name || null,
                 room: task.room,
+                chore: task.chore,
                 date: task.date,
                 status: task.status,
                 completedAt: task.completedAt,
@@ -201,6 +203,15 @@ const getMe = async (req, res) => {
                             select: {
                                 id: true,
                                 name: true,
+                            },
+                        },
+                        chore: {
+                            select: {
+                                id: true,
+                                title: true,
+                                points: true,
+                                roomId: true,
+                                householdId: true,
                             },
                         },
                     },
@@ -283,6 +294,15 @@ const getMe = async (req, res) => {
                                             name: true,
                                         },
                                     },
+                                    chore: {
+                                        select: {
+                                            id: true,
+                                            title: true,
+                                            points: true,
+                                            roomId: true,
+                                            householdId: true,
+                                        },
+                                    },
                                 },
                             },
                         },
@@ -326,6 +346,15 @@ const getMe = async (req, res) => {
                                 select: {
                                     id: true,
                                     name: true,
+                                },
+                            },
+                            chore: {
+                                select: {
+                                    id: true,
+                                    title: true,
+                                    points: true,
+                                    roomId: true,
+                                    householdId: true,
                                 },
                             },
                         },

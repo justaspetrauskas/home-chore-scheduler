@@ -269,7 +269,27 @@ Path params:
 
 ### GET /chores
 
-No request body.
+Query params (optional):
+
+- householdId: household id when user belongs to multiple households
+
+Behavior:
+
+- returns chores scoped to one household
+- ordered by usage for reuse-first UX
+
+### GET /chores/suggestions
+
+Query params (all optional):
+
+- householdId: household id when user belongs to multiple households
+- query: free text used to match title and canonical title
+- roomId: room id; when provided, returns room chores and global chores (roomId null)
+- limit: max suggestions (default 10, max 25)
+
+Behavior:
+
+- returns ranked household chore suggestions for autocomplete and reuse
 
 ### GET /chores/:id
 
@@ -285,6 +305,7 @@ Request body:
 {
   "title": "Vacuum Living Room",
   "description": "Deep clean including corners",
+  "householdId": "4d4f2a4f-688d-4c8b-9981-80eeaf6673d1",
   "roomId": "d8bb14f6-7c75-47de-bba3-c336561d8351",
   "points": 10
 }
@@ -293,8 +314,14 @@ Request body:
 Validation highlights:
 
 - title is required
+- householdId is optional when user has a default or only one membership
 - roomId must be UUID when provided
-- points must be an integer from 1 to 100 when provided
+- points must be an integer from 0 to 100 when provided
+
+Behavior:
+
+- deduplicates by canonical title inside household
+- returns existing chore with `reused: true` when duplicate is found
 
 ### PUT /chores/:id
 
@@ -308,8 +335,14 @@ Request body:
 {
   "title": "Vacuum + Mop Living Room",
   "description": "Include under the couch",
+  "roomId": "d8bb14f6-7c75-47de-bba3-c336561d8351",
   "points": 15
 }
+
+Behavior:
+
+- no usage increment on update
+- may return an existing chore with `reused: true` if canonical title collides in household
 ```
 
 ### DELETE /chores/:id
@@ -317,6 +350,40 @@ Request body:
 Path params:
 
 - id: chore id
+
+## Task Assignments
+
+### PATCH /task-assignments/:id/chore
+
+Path params:
+
+- id: task assignment id
+
+Request body:
+
+```json
+{
+  "choreId": "d8bb14f6-7c75-47de-bba3-c336561d8351"
+}
+```
+
+Notes:
+
+- send `choreId: null` to clear assigned chore
+- chore must belong to the same household as the event
+- if chore has `roomId`, it must match assignment room
+- this endpoint updates chore `usageCount` and `lastUsedAt`
+
+### POST /task-assignments/:id/complete
+
+Path params:
+
+- id: task assignment id
+
+Notes:
+
+- allowed for assigned user or household admin
+- returns task assignment payload including `chore`
 
 ## Cleaning Events
 

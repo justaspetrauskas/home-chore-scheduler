@@ -72,6 +72,7 @@ model Household {
 
   members HouseholdMember[]
   rooms   Room[]
+  chores  Chore[]
   events  CleaningEvent[]
   invitations Invitation[]
 }
@@ -129,6 +130,9 @@ model Chore {
   description String?
   points      Int
 
+  householdId String?
+  household   Household? @relation(fields: [householdId], references: [id])
+
   // optional reference to a room/area
   roomId String?
   room   Room?   @relation(fields: [roomId], references: [id])
@@ -137,6 +141,12 @@ model Chore {
   createdBy   User             @relation(fields: [createdById], references: [id])
   createdAt   DateTime         @default(now())
   assignments TaskAssignment[]
+  usageCount Int       @default(0)
+  lastUsedAt DateTime?
+  canonicalTitle String?
+
+  @@unique([householdId, canonicalTitle])
+  @@index([householdId, usageCount, lastUsedAt])
 }
 
 model CleaningEvent {

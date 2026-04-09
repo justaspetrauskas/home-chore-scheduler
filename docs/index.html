@@ -54,6 +54,29 @@
         opacity: 0.95;
       }
 
+      .hero-controls {
+        margin-top: 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.14);
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 0.92rem;
+      }
+
+      .toggle input {
+        accent-color: #84cc16;
+      }
+
       .layout {
         display: grid;
         grid-template-columns: 280px 1fr;
@@ -164,6 +187,10 @@
         font-size: 0.9rem;
       }
 
+      body.request-body-hidden .request-body-block {
+        display: none;
+      }
+
       @media (max-width: 900px) {
         .layout { grid-template-columns: 1fr; }
         .toc {
@@ -178,6 +205,12 @@
       <header class="hero">
         <h1>Home Chore Scheduler API</h1>
         <p>This page is generated from a predefined markdown source tracked in the repository.</p>
+        <div class="hero-controls" id="hero-controls">
+          <label class="toggle" id="request-body-toggle-wrapper">
+            <input type="checkbox" id="request-body-toggle" checked />
+            <span>Show Request Bodies</span>
+          </label>
+        </div>
       </header>
 
       <main class="layout">
@@ -217,10 +250,14 @@
 <a href="#delete-roomsid" data-depth="3">DELETE /rooms/:id</a>
 <a href="#chores" data-depth="2">Chores</a>
 <a href="#get-chores" data-depth="3">GET /chores</a>
+<a href="#get-choressuggestions" data-depth="3">GET /chores/suggestions</a>
 <a href="#get-choresid" data-depth="3">GET /chores/:id</a>
 <a href="#post-chores" data-depth="3">POST /chores</a>
 <a href="#put-choresid" data-depth="3">PUT /chores/:id</a>
 <a href="#delete-choresid" data-depth="3">DELETE /chores/:id</a>
+<a href="#task-assignments" data-depth="2">Task Assignments</a>
+<a href="#patch-task-assignmentsidchore" data-depth="3">PATCH /task-assignments/:id/chore</a>
+<a href="#post-task-assignmentsidcomplete" data-depth="3">POST /task-assignments/:id/complete</a>
 <a href="#cleaning-events" data-depth="2">Cleaning Events</a>
 <a href="#get-cleaning-events" data-depth="3">GET /cleaning-events</a>
 <a href="#post-cleaning-events" data-depth="3">POST /cleaning-events</a>
@@ -388,7 +425,26 @@
 <ul>
 <li>id: room id</li>
 </ul>
-<h2 id="chores">Chores</h2><h3 id="get-chores">GET /chores</h3><p>No request body.</p>
+<h2 id="chores">Chores</h2><h3 id="get-chores">GET /chores</h3><p>Query params (optional):</p>
+<ul>
+<li>householdId: household id when user belongs to multiple households</li>
+</ul>
+<p>Behavior:</p>
+<ul>
+<li>returns chores scoped to one household</li>
+<li>ordered by usage for reuse-first UX</li>
+</ul>
+<h3 id="get-choressuggestions">GET /chores/suggestions</h3><p>Query params (all optional):</p>
+<ul>
+<li>householdId: household id when user belongs to multiple households</li>
+<li>query: free text used to match title and canonical title</li>
+<li>roomId: room id; when provided, returns room chores and global chores (roomId null)</li>
+<li>limit: max suggestions (default 10, max 25)</li>
+</ul>
+<p>Behavior:</p>
+<ul>
+<li>returns ranked household chore suggestions for autocomplete and reuse</li>
+</ul>
 <h3 id="get-choresid">GET /chores/:id</h3><p>Path params:</p>
 <ul>
 <li>id: chore id</li>
@@ -397,6 +453,7 @@
 <pre><code class="language-json">{
   &quot;title&quot;: &quot;Vacuum Living Room&quot;,
   &quot;description&quot;: &quot;Deep clean including corners&quot;,
+  &quot;householdId&quot;: &quot;4d4f2a4f-688d-4c8b-9981-80eeaf6673d1&quot;,
   &quot;roomId&quot;: &quot;d8bb14f6-7c75-47de-bba3-c336561d8351&quot;,
   &quot;points&quot;: 10
 }
@@ -404,8 +461,14 @@
 <p>Validation highlights:</p>
 <ul>
 <li>title is required</li>
+<li>householdId is optional when user has a default or only one membership</li>
 <li>roomId must be UUID when provided</li>
-<li>points must be an integer from 1 to 100 when provided</li>
+<li>points must be an integer from 0 to 100 when provided</li>
+</ul>
+<p>Behavior:</p>
+<ul>
+<li>deduplicates by canonical title inside household</li>
+<li>returns existing chore with <code>reused: true</code> when duplicate is found</li>
 </ul>
 <h3 id="put-choresid">PUT /chores/:id</h3><p>Path params:</p>
 <ul>
@@ -415,12 +478,43 @@
 <pre><code class="language-json">{
   &quot;title&quot;: &quot;Vacuum + Mop Living Room&quot;,
   &quot;description&quot;: &quot;Include under the couch&quot;,
+  &quot;roomId&quot;: &quot;d8bb14f6-7c75-47de-bba3-c336561d8351&quot;,
   &quot;points&quot;: 15
 }
+
+Behavior:
+
+- no usage increment on update
+- may return an existing chore with `reused: true` if canonical title collides in household
 </code></pre>
 <h3 id="delete-choresid">DELETE /chores/:id</h3><p>Path params:</p>
 <ul>
 <li>id: chore id</li>
+</ul>
+<h2 id="task-assignments">Task Assignments</h2><h3 id="patch-task-assignmentsidchore">PATCH /task-assignments/:id/chore</h3><p>Path params:</p>
+<ul>
+<li>id: task assignment id</li>
+</ul>
+<p>Request body:</p>
+<pre><code class="language-json">{
+  &quot;choreId&quot;: &quot;d8bb14f6-7c75-47de-bba3-c336561d8351&quot;
+}
+</code></pre>
+<p>Notes:</p>
+<ul>
+<li>send <code>choreId: null</code> to clear assigned chore</li>
+<li>chore must belong to the same household as the event</li>
+<li>if chore has <code>roomId</code>, it must match assignment room</li>
+<li>this endpoint updates chore <code>usageCount</code> and <code>lastUsedAt</code></li>
+</ul>
+<h3 id="post-task-assignmentsidcomplete">POST /task-assignments/:id/complete</h3><p>Path params:</p>
+<ul>
+<li>id: task assignment id</li>
+</ul>
+<p>Notes:</p>
+<ul>
+<li>allowed for assigned user or household admin</li>
+<li>returns task assignment payload including <code>chore</code></li>
 </ul>
 <h2 id="cleaning-events">Cleaning Events</h2><h3 id="get-cleaning-events">GET /cleaning-events</h3><p>No request body.</p>
 <h3 id="post-cleaning-events">POST /cleaning-events</h3><p>Request body:</p>
@@ -471,5 +565,38 @@
         </article>
       </main>
     </div>
+    <script>
+      (function () {
+        const markerTexts = ["request body:", "request body example:"];
+        const article = document.querySelector("article.doc");
+        const toggle = document.getElementById("request-body-toggle");
+        const toggleWrapper = document.getElementById("request-body-toggle-wrapper");
+
+        if (!article || !toggle || !toggleWrapper) return;
+
+        const paragraphs = Array.from(article.querySelectorAll("p"));
+        let markedCount = 0;
+
+        paragraphs.forEach((paragraph) => {
+          const text = paragraph.textContent.trim().toLowerCase();
+          if (!markerTexts.includes(text)) return;
+
+          const next = paragraph.nextElementSibling;
+          if (next && next.tagName === "PRE") {
+            next.classList.add("request-body-block");
+            markedCount += 1;
+          }
+        });
+
+        if (markedCount === 0) {
+          toggleWrapper.style.display = "none";
+          return;
+        }
+
+        toggle.addEventListener("change", () => {
+          document.body.classList.toggle("request-body-hidden", !toggle.checked);
+        });
+      })();
+    </script>
   </body>
 </html>
